@@ -202,6 +202,42 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 15, 31, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: var(--dark-bg);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 40px rgba(0, 246, 255, 0.3);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
         /* Tab Styling */
         .tab-button {
             background-color: #1e293b;
@@ -261,6 +297,44 @@
             filter: drop-shadow(0 0 10px var(--neon-cyan));
         }
 
+        /* Voice Assistant Button */
+        #voice-assistant-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 40;
+            background-color: var(--neon-purple);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--neon-purple);
+            transition: all 0.3s ease;
+        }
+        #voice-assistant-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px var(--neon-purple);
+        }
+        #voice-assistant-btn.listening {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(168, 85, 247, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+        }
+
+        /* Analysis Loader Animation */
+        @keyframes pulse-loader {
+            0%, 100% { transform: scale(0.6); opacity: 0; }
+            50% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pulse-loader-1 { animation: pulse-loader 3s ease-in-out infinite; }
+        .animate-pulse-loader-2 { animation: pulse-loader 3s ease-in-out infinite; animation-delay: 1.5s; }
+        .animate-spin-slow { animation: spin 4s linear infinite reverse; }
+
     </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8 flex flex-col min-h-screen">
@@ -293,6 +367,11 @@
                                 </button>
                             </div>
                             <p id="name-error" class="text-red-400 text-sm mt-2 text-center hidden">Lütfen başlamadan önce bir isim girin.</p>
+                        </div>
+                        <div class="mt-8 flex flex-wrap justify-center gap-3">
+                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="about">Hakkında</button>
+                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="archetypes">Arketipler</button>
+                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="contact">İletişim</button>
                         </div>
                     </div>
                 </div>
@@ -366,52 +445,59 @@
                 </div>
              </div>
         </div>
+    </main>
 
-        <!-- HAKKINDA BÖLÜMÜ -->
-        <div id="about-section" class="max-w-5xl mx-auto mt-12">
-            <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8">
-                <div class="flex flex-wrap justify-center border-b border-slate-700 mb-6">
-                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg active" data-tab="archetypes">Arketipler</button>
-                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="about">Hakkında</button>
-                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="contact">İletişim</button>
-                </div>
-                <div id="tab-content-container">
-                    <div id="archetypes-content" class="tab-content active">
-                        <div class="relative">
-                            <!-- Carousel Wrapper -->
-                            <div id="archetype-carousel-wrapper" class="overflow-hidden">
-                                <!-- Carousel Track -->
-                                <div id="archetype-carousel" class="flex transition-transform duration-500 ease-in-out">
-                                    <!-- Archetype Cards will be dynamically inserted here -->
-                                </div>
+    <footer class="text-center text-slate-500 text-xs p-4 mt-auto">
+        © 2025 Tüm Hakları Saklıdır. Bu içerik eğitim amaçlıdır.
+    </footer>
+
+    <!-- BİLGİ MODALI -->
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="absolute top-4 right-5 text-slate-400 hover:text-white transition-colors">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="flex flex-wrap justify-center border-b border-slate-700 mb-6">
+                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="about">Hakkında</button>
+                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="archetypes">Arketipler</button>
+                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="contact">İletişim</button>
+            </div>
+            <div id="tab-content-container">
+                <div id="archetypes-content" class="tab-content">
+                    <div class="relative">
+                        <div id="archetype-carousel-wrapper" class="overflow-hidden">
+                            <div id="archetype-carousel" class="flex transition-transform duration-500 ease-in-out">
+                                <!-- Archetype Cards will be dynamically inserted here -->
                             </div>
-                            <!-- Carousel Navigation -->
-                            <button id="archetype-prev" class="absolute top-1/2 -left-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
-                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                            </button>
-                            <button id="archetype-next" class="absolute top-1/2 -right-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
-                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                            </button>
                         </div>
+                        <button id="archetype-prev" class="absolute top-1/2 -left-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <button id="archetype-next" class="absolute top-1/2 -right-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
                     </div>
-                    <div id="about-content" class="tab-content">
-                        <p class="text-slate-300 leading-relaxed">Bu sayfada yer alan bilgiler, kaynak gösterilen içeriklerden derlenmiştir. Sertifikanın yasal bir geçerliliği yoktur, sadece eğitim amacıyla ve kar gütmeden hazırlanmıştır.</p>
-                    </div>
-                    <div id="contact-content" class="tab-content">
-                        <p class="text-slate-300 leading-relaxed mb-2">Sorularınız veya geri bildirimleriniz için LinkedIn üzerinden iletişime geçebilirsiniz:</p>
-                        <a href="https://linkedin.com/in/semayy" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 tech-font transition-colors">
-                            linkedin.com/in/semayy
-                        </a>
-                        <p class="text-slate-300 mt-4">Semanur Ayyıldız<br><span class="text-sm text-slate-400">Görsel İletişim Tasarımı ve Dijital Dönüşüm Uzmanı</span></p>
-                    </div>
+                </div>
+                <div id="about-content" class="tab-content">
+                    <h3 class="tech-font text-2xl text-purple-300 mb-4">Testin Amacı Nedir?</h3>
+                    <p class="text-slate-300 leading-relaxed mb-4">Bu profil testi, yaratıcılığınızın hangi yönlerinin daha baskın olduğunu keşfetmenize yardımcı olmak için tasarlanmıştır. Sonuçlar, klinik bir psikolojik değerlendirme değildir; bunun yerine, yaratıcı düşünce süreçlerinizi ve problem çözme yaklaşımlarınızı anlamanız için bir çerçeve sunar.</p>
+                    <p class="text-slate-300 leading-relaxed">Mitolojik arketipleri, farklı yaratıcılık türleri için güçlü birer metafor olarak kullanıyoruz. Bu testle amacımız, kendi yaratıcı "süper güçlerinizi" tanımanıza, bu güçleri nasıl daha etkili kullanabileceğinize ve potansiyel gelişim alanlarınıza dair farkındalık kazanmanıza olanak tanımaktır. Bu yolculuk, yaratıcı potansiyelinizi en üst düzeye çıkarmanız için bir başlangıç noktasıdır.</p>
+                </div>
+                <div id="contact-content" class="tab-content">
+                    <p class="text-slate-300 leading-relaxed mb-2">Sorularınız veya geri bildirimleriniz için LinkedIn üzerinden iletişime geçebilirsiniz:</p>
+                    <a href="https://linkedin.com/in/semayy" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 tech-font transition-colors">
+                        linkedin.com/in/semayy
+                    </a>
+                    <p class="text-slate-300 mt-4">Semanur Ayyıldız<br><span class="text-sm text-slate-400">Görsel İletişim Tasarımı ve Dijital Dönüşüm Uzmanı</span></p>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 
-    <footer class="text-center text-slate-500 text-xs p-4 mt-8">
-        © 2025 Tüm Hakları Saklıdır. Bu içerik eğitim amaçlıdır.
-    </footer>
+    <!-- SESLİ ASİSTAN BUTONU -->
+    <button id="voice-assistant-btn" title="Sesli Asistanı Başlat">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+    </button>
 
 <script>
 // --- GLOBAL DEĞİŞKENLER VE DOM ELEMENTLERİ --- //
@@ -443,17 +529,22 @@ const archetypeChartCanvas = document.getElementById('archetype-chart');
 const profileAnalysisText = document.getElementById('profile-analysis-text');
 const starsContainer = document.getElementById('stars');
 
-// Tab & Carousel Elementleri
-const tabButtons = document.querySelectorAll('.tab-button');
-const tabContents = document.querySelectorAll('.tab-content');
+// Modal, Tab & Carousel Elementleri
+const infoModal = document.getElementById('info-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const infoModalBtns = document.querySelectorAll('.info-modal-btn');
+const modalTabButtons = infoModal.querySelectorAll('.tab-button');
+const modalTabContents = infoModal.querySelectorAll('.tab-content');
 const archetypeCarousel = document.getElementById('archetype-carousel');
 const archetypePrevBtn = document.getElementById('archetype-prev');
 const archetypeNextBtn = document.getElementById('archetype-next');
 
+// Sesli Asistan Elementleri
+const voiceAssistantBtn = document.getElementById('voice-assistant-btn');
 
 // Durum (State) Değişkenleri
 let currentModuleIndex = 0;
-let userAnswers = {}; // { moduleIndex: answer }
+let userAnswers = {};
 let userArchetypeScores = {};
 let archetypeChart = null;
 let archetypeCurrentIndex = 0;
@@ -475,22 +566,6 @@ const translations = {
         gemini_feedback_title: "Yapay Zeka Geri Bildirimi:",
         gemini_error: "Bir hata oluştu. Lütfen tekrar deneyin.",
         evaluate_ideas_button: "✨ Fikirlerimi Değerlendir",
-    },
-    en: {
-        welcome_title: "CREATIVE INTELLIGENCE PROFILE",
-        welcome_intro: "Embark on this journey to discover your creative approaches and unlock your potential.",
-        enter_name: "FULL NAME:",
-        start_button: "START",
-        main_menu_button: "MAIN MENU",
-        progress: "PROGRESS",
-        results_title: "Your Creative Profile",
-        overall_success: "Overall Success",
-        profile_analysis: "Profile Analysis",
-        restart_button: "Restart",
-        evaluating_feedback: "Evaluating...",
-        gemini_feedback_title: "AI Feedback:",
-        gemini_error: "An error occurred. Please try again.",
-        evaluate_ideas_button: "✨ Evaluate My Ideas",
     }
 };
 
@@ -539,28 +614,28 @@ const archetypes = {
 
 const assessmentModules = [
     // --- AŞAMA 1: KEŞİF ---
-    { stage: 1, type: 'task', archetypes: ['athena', 'dionysus'], tr: { title: "Modül 1: Strateji vs. Sezgi", instruction: "Bir müzik festivali düzenliyorsunuz. A) Festivalin ana stratejisini (hedef kitle, bütçe) 2-3 cümlede özetleyin. B) Festival için 3 tane çılgın ve spontane etkinlik fikri listeleyin." }, en: { title: "Module 1: Strategy vs. Intuition", instruction: "You are organizing a music festival. A) Summarize the main strategy (target audience, budget) in 2-3 sentences. B) List 3 wild and spontaneous event ideas for the festival." } },
-    { stage: 1, type: 'task', archetypes: ['apollo', 'hephaestus'], tr: { title: "Modül 2: Uyum vs. Yapı", instruction: "Yeni bir akıllı saat tasarlıyorsunuz. A) Saatin logosu için bir konsept açıklayın. B) Saatin en önemli 3 teknik özelliğini listeleyin." }, en: { title: "Module 2: Harmony vs. Structure", instruction: "You are designing a new smartwatch. A) Describe a concept for the watch's logo. B) List the 3 most important technical features of the watch." } },
-    { stage: 1, type: 'task', archetypes: ['hermes', 'janus'], tr: { title: "Modül 3: Çeviklik vs. Yansıtma", instruction: "A) 'Bulut', 'Anahtar', 'Müzik' kelimeleri arasında bir bağlantı kurun. B) Geçmişte başarısız olan bir projeden çıkarılacak bir dersi yazın." }, en: { title: "Module 3: Agility vs. Reflection", instruction: "A) Make a connection between the words 'Cloud', 'Key', 'Music'. B) Write a lesson learned from a past failed project." } },
-    { stage: 1, type: 'task', archetypes: ['prometheus', 'artemis'], tr: { title: "Modül 4: Vizyon vs. Odak", instruction: "A) 2050'de eğitimin nasıl olacağını hayal edin. B) Bu vizyondaki tek bir soruna (örn: eşitsizlik) odaklanıp bir çözüm önerin." }, en: { title: "Module 4: Vision vs. Focus", instruction: "A) Imagine what education will be like in 2050. B) Focus on a single problem in that vision (e.g., inequality) and propose a solution." } },
-    { stage: 1, type: 'task', archetypes: ['persephone', 'thalia'], tr: { title: "Modül 5: Dönüşüm vs. Sosyal Zeka", instruction: "A) Eski bir gazeteyi hangi farklı amaçlarla kullanabilirsiniz? 3 fikir yazın. B) [Rastgele bir resim gösterilecek] Bu resme komik bir başlık bulun." }, en: { title: "Module 5: Transformation vs. Social Intelligence", instruction: "A) For what different purposes can you use an old newspaper? Write 3 ideas. B) [A random picture will be shown] Find a funny caption for this picture." } },
-    { stage: 1, type: 'intro', tr: { title: "Modül 6: Aşama 1 Tamamlandı", instruction: "Keşif aşamasını tamamladınız. Şimdi bilgilerinizi test etme zamanı. Bir sonraki aşama, senaryo bazlı sorulardan oluşan bir quiz'dir." }, en: { title: "Module 6: Stage 1 Complete", instruction: "You have completed the Discovery stage. Now it's time to test your knowledge. The next stage is a quiz with scenario-based questions." } },
+    { stage: 1, type: 'task', archetypes: ['athena', 'dionysus'], tr: { title: "Modül 1: Strateji vs. Sezgi", instruction: "Bir müzik festivali düzenliyorsunuz. A) Festivalin ana stratejisini (hedef kitle, bütçe) 2-3 cümlede özetleyin. B) Festival için 3 tane çılgın ve spontane etkinlik fikri listeleyin." } },
+    { stage: 1, type: 'task', archetypes: ['apollo', 'hephaestus'], tr: { title: "Modül 2: Uyum vs. Yapı", instruction: "Yeni bir akıllı saat tasarlıyorsunuz. A) Saatin logosu için bir konsept açıklayın. B) Saatin en önemli 3 teknik özelliğini listeleyin." } },
+    { stage: 1, type: 'task', archetypes: ['hermes', 'janus'], tr: { title: "Modül 3: Çeviklik vs. Yansıtma", instruction: "A) 'Bulut', 'Anahtar', 'Müzik' kelimeleri arasında bir bağlantı kurun. B) Geçmişte başarısız olan bir projeden çıkarılacak bir dersi yazın." } },
+    { stage: 1, type: 'task', archetypes: ['prometheus', 'artemis'], tr: { title: "Modül 4: Vizyon vs. Odak", instruction: "A) 2050'de eğitimin nasıl olacağını hayal edin. B) Bu vizyondaki tek bir soruna (örn: eşitsizlik) odaklanıp bir çözüm önerin." } },
+    { stage: 1, type: 'task', archetypes: ['persephone', 'thalia'], tr: { title: "Modül 5: Dönüşüm vs. Sosyal Zeka", instruction: "A) Eski bir gazeteyi hangi farklı amaçlarla kullanabilirsiniz? 3 fikir yazın. B) [Rastgele bir resim gösterilecek] Bu resme komik bir başlık bulun." } },
+    { stage: 1, type: 'intro', tr: { title: "Modül 6: Aşama 1 Tamamlandı", instruction: "Keşif aşamasını tamamladınız. Şimdi bilgilerinizi test etme zamanı. Bir sonraki aşama, senaryo bazlı sorulardan oluşan bir quiz'dir." } },
     
     // --- AŞAMA 2: SINAMA (QUIZ) ---
-    { stage: 2, type: 'quiz', tr: { question: "Bir ürünün beklenmedik bir şekilde popülerliğini kaybetmesi durumunda, hangi yaklaşım öncelikli olmalıdır?", options: ["Pazar verilerini analiz edip strateji oluşturmak.", "Hızla yeni bir pazarlama kampanyası denemek.", "Ürünün tasarımını tamamen değiştirmek."], answer: 0, archetype: "athena" }, en: { question: "If a product unexpectedly loses its popularity, which approach should be prioritized?", options: ["Analyze market data and create a strategy.", "Quickly try a new marketing campaign.", "Completely change the product's design."], answer: 0, archetype: "athena" } },
-    { stage: 2, type: 'quiz', tr: { question: "Bir projenin estetik ve kullanıcı deneyimi eleştiriliyorsa, hangi arketipin yeteneğine en çok ihtiyaç duyulur?", options: ["Mühendislik ve yapısal sağlamlık.", "Uyum, denge ve sanatsal vizyon.", "Geçmiş hatalardan ders çıkarma."], answer: 1, archetype: "apollo" }, en: { question: "If a project's aesthetics and user experience are criticized, which archetype's skill is most needed?", options: ["Engineering and structural integrity.", "Harmony, balance, and artistic vision.", "Learning from past mistakes."], answer: 1, archetype: "apollo" } },
-    { stage: 2, type: 'quiz', tr: { question: "Kriz anında hızlı ve yaratıcı çözümler bulmak için hangi arketip en uygundur?", options: ["Gelecek için uzun vadeli planlar yapan.", "Farklı fikirler arasında anında köprü kuran.", "Belirli bir hedefe odaklanıp şaşmayan."], answer: 1, archetype: "hermes" }, en: { question: "Who is most suitable for finding quick and creative solutions in a crisis?", options: ["One who makes long-term plans for the future.", "One who instantly builds bridges between different ideas.", "One who focuses on a specific goal without wavering."], answer: 1, archetype: "hermes" } },
-    { stage: 2, type: 'quiz', tr: { question: "Soyut bir konsepti, çalışan bir prototipe dönüştürme görevi en çok hangi arketipe aittir?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" }, en: { question: "The task of turning an abstract concept into a working prototype belongs most to which archetype?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" } },
-    { stage: 2, type: 'quiz', tr: { question: "Mevcut bir teknolojiyi alıp, kimsenin aklına gelmeyen yepyeni bir alanda kullanma fikri hangi arketipi yansıtır?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" }, en: { question: "The idea of taking an existing technology and using it in a brand new field that no one has thought of reflects which archetype?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" } },
-    { stage: 2, type: 'intro', tr: { title: "Modül 12: Aşama 2 Tamamlandı", instruction: "Quiz aşamasını başarıyla geçtiniz. Son aşama, soyut düşünme ve desen tanıma yeteneğinizi ölçecek olan şekil eşleştirme testidir." }, en: { title: "Module 12: Stage 2 Complete", instruction: "You have successfully passed the Quiz stage. The final stage is a shape matching test that will measure your abstract thinking and pattern recognition abilities." } },
+    { stage: 2, type: 'quiz', tr: { question: "Bir ürünün beklenmedik bir şekilde popülerliğini kaybetmesi durumunda, hangi yaklaşım öncelikli olmalıdır?", options: ["Pazar verilerini analiz edip strateji oluşturmak.", "Hızla yeni bir pazarlama kampanyası denemek.", "Ürünün tasarımını tamamen değiştirmek."], answer: 0, archetype: "athena" } },
+    { stage: 2, type: 'quiz', tr: { question: "Bir projenin estetik ve kullanıcı deneyimi eleştiriliyorsa, hangi arketipin yeteneğine en çok ihtiyaç duyulur?", options: ["Mühendislik ve yapısal sağlamlık.", "Uyum, denge ve sanatsal vizyon.", "Geçmiş hatalardan ders çıkarma."], answer: 1, archetype: "apollo" } },
+    { stage: 2, type: 'quiz', tr: { question: "Kriz anında hızlı ve yaratıcı çözümler bulmak için hangi arketip en uygundur?", options: ["Gelecek için uzun vadeli planlar yapan.", "Farklı fikirler arasında anında köprü kuran.", "Belirli bir hedefe odaklanıp şaşmayan."], answer: 1, archetype: "hermes" } },
+    { stage: 2, type: 'quiz', tr: { question: "Soyut bir konsepti, çalışan bir prototipe dönüştürme görevi en çok hangi arketipe aittir?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" } },
+    { stage: 2, type: 'quiz', tr: { question: "Mevcut bir teknolojiyi alıp, kimsenin aklına gelmeyen yepyeni bir alanda kullanma fikri hangi arketipi yansıtır?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" } },
+    { stage: 2, type: 'intro', tr: { title: "Modül 12: Aşama 2 Tamamlandı", instruction: "Quiz aşamasını başarıyla geçtiniz. Son aşama, soyut düşünme ve desen tanıma yeteneğinizi ölçecek olan şekil eşleştirme testidir." } },
 
     // --- AŞAMA 3: SENTEZ (ŞEKİL EŞLEŞTİRME) ---
-    { stage: 3, type: 'shape', archetype: 'apollo', tr: { title: "Modül 13: Simetriyi Bul" }, en: { title: "Module 13: Find the Symmetry" }, data: { problem: `<path d="M50 10 V 90 M 10 50 H 50" stroke="white" stroke-width="3"/>`, options: [`<path d="M50 10 V 90 M 90 50 H 50" stroke="white" stroke-width="3"/>`, `<path d="M10 10 L 50 50 L 10 90" stroke="white" stroke-width="3"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'hephaestus', tr: { title: "Modül 14: Parçayı Tamamla" }, en: { title: "Module 14: Complete the Part" }, data: { problem: `<path d="M20 20 H 80 V 80 H 60 V 40 H 40" stroke="white" stroke-width="3"/>`, options: [`<path d="M40 40 V 80 H 20 V 20" stroke="white" stroke-width="3"/>`, `<circle cx="50" cy="60" r="10" stroke="white" stroke-width="3"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'dionysus', tr: { title: "Modül 15: Deseni Boz" }, en: { title: "Module 15: Break the Pattern" }, data: { problem: `<g><circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/><circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/></g>`, options: [`<circle cx="50" cy="50" r="10"/>`, `<rect x="40" y="40" width="20" height="20"/>`], answer: 1 } },
-    { stage: 3, type: 'shape', archetype: 'hermes', tr: { title: "Modül 16: Köprüyü Kur" }, en: { title: "Module 16: Build the Bridge" }, data: { problem: `<g><circle cx="25" cy="50" r="15"/><rect x="65" y="35" width="30" height="30"/></g>`, options: [`<path d="M40 50 H 65"/>`, `<path d="M25 65 C 40 80, 60 80, 75 65"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'artemis', tr: { title: "Modül 17: Hedefi Bul" }, en: { title: "Module 17: Find the Target" }, data: { problem: `<g><circle cx="50" cy="50" r="40" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="30" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="20" stroke-dasharray="5 5"/></g>`, options: [`<circle cx="50" cy="50" r="5"/>`, `<path d="M50 10 V 90 M10 50 H 90"/>`], answer: 1 } },
-    { stage: 3, type: 'shape', archetype: 'prometheus', tr: { title: "Modül 18: Yeni Formu Yarat" }, en: { title: "Module 18: Create the New Form" }, data: { problem: `<g><rect x="20" y="40" width="20" height="20"/><circle cx="80" cy="50" r="10"/></g>`, options: [`<rect x="50" y="40" width="20" height="20"/>`, `<path d="M40 50 C 50 20, 70 80, 80 50"/>`], answer: 1 } }
+    { stage: 3, type: 'shape', archetype: 'apollo', tr: { title: "Modül 13: Simetriyi Bul" }, data: { problem: `<path d="M50 10 V 90 M 10 50 H 50" stroke="white" stroke-width="3"/>`, options: [`<path d="M50 10 V 90 M 90 50 H 50" stroke="white" stroke-width="3"/>`, `<path d="M10 10 L 50 50 L 10 90" stroke="white" stroke-width="3"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'hephaestus', tr: { title: "Modül 14: Parçayı Tamamla" }, data: { problem: `<path d="M20 20 H 80 V 80 H 60 V 40 H 40" stroke="white" stroke-width="3"/>`, options: [`<path d="M40 40 V 80 H 20 V 20" stroke="white" stroke-width="3"/>`, `<circle cx="50" cy="60" r="10" stroke="white" stroke-width="3"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'dionysus', tr: { title: "Modül 15: Deseni Boz" }, data: { problem: `<g><circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/><circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/></g>`, options: [`<circle cx="50" cy="50" r="10"/>`, `<rect x="40" y="40" width="20" height="20"/>`], answer: 1 } },
+    { stage: 3, type: 'shape', archetype: 'hermes', tr: { title: "Modül 16: Köprüyü Kur" }, data: { problem: `<g><circle cx="25" cy="50" r="15"/><rect x="65" y="35" width="30" height="30"/></g>`, options: [`<path d="M40 50 H 65"/>`, `<path d="M25 65 C 40 80, 60 80, 75 65"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'artemis', tr: { title: "Modül 17: Hedefi Bul" }, data: { problem: `<g><circle cx="50" cy="50" r="40" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="30" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="20" stroke-dasharray="5 5"/></g>`, options: [`<circle cx="50" cy="50" r="5"/>`, `<path d="M50 10 V 90 M10 50 H 90"/>`], answer: 1 } },
+    { stage: 3, type: 'shape', archetype: 'prometheus', tr: { title: "Modül 18: Yeni Formu Yarat" }, data: { problem: `<g><rect x="20" y="40" width="20" height="20"/><circle cx="80" cy="50" r="10"/></g>`, options: [`<rect x="50" y="40" width="20" height="20"/>`, `<path d="M40 50 C 50 20, 70 80, 80 50"/>`], answer: 1 } }
 ];
 
 // --- GEMINI API YARDIMCI FONKSİYONU --- //
@@ -764,7 +839,24 @@ function createRadarChart() {
 /** Gemini ile kişiselleştirilmiş profil analiz metnini oluşturur */
 async function generateProfileAnalysis() {
     const analysisContainer = document.getElementById('profile-analysis-text');
-    analysisContainer.innerHTML = `<div class="loader"></div>`;
+    
+    const analysisLoaderHTML = `
+        <div class="text-center p-4">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <div class="absolute inset-0 rounded-full border-2 border-cyan-500/30 animate-pulse-loader-1"></div>
+                <div class="absolute inset-0 rounded-full border-2 border-purple-500/30 animate-pulse-loader-2"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-cyan-300 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.293 2.293M17.707 5.293L15.414 7.586m-3.414.414L9.586 9.586m6.414 6.414l-2.293 2.293M12 12a2 2 0 100-4 2 2 0 000 4zm0 0a2 2 0 100 4 2 2 0 000-4z" />
+                    </svg>
+                </div>
+            </div>
+            <p class="tech-font text-lg text-cyan-200 animate-pulse">Analiziniz hazırlanıyor...</p>
+            <p class="text-slate-400 text-sm">Lütfen ekrandan ayrılmayın.</p>
+        </div>
+    `;
+    
+    analysisContainer.innerHTML = analysisLoaderHTML;
 
     const sortedArchetypes = Object.entries(userArchetypeScores)
         .sort(([,a],[,b]) => b-a)
@@ -777,13 +869,8 @@ async function generateProfileAnalysis() {
         const analysis = await callGeminiAPI(prompt);
         analysisContainer.innerHTML = `<p>${analysis}</p>`;
     } catch (error) {
-        analysisContainer.innerHTML = `
-            <div class="text-center text-amber-300 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <p class="text-3xl mb-2 animate-pulse">📡</p>
-                <p class="font-bold tech-font text-lg">KOZMİK PARAZİT!</p>
-                <p class="text-sm mt-1">Yaratıcı profil sinyalleri geçici olarak engellendi. Lütfen birazdan tekrar deneyerek evrenin sırlarını çözmemize yardımcı olun.</p>
-            </div>
-        `;
+        // Hata durumunda, isteğe göre, hata mesajı yerine yükleniyor animasyonunu göstermeye devam et
+        analysisContainer.innerHTML = analysisLoaderHTML;
     }
 }
 
@@ -876,7 +963,6 @@ function setupArchetypeCarousel() {
         const itemsPerPage = getItemsPerPage();
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         
-        // İndeksin sınırlarda kalmasını sağla
         if (archetypeCurrentIndex >= totalPages) {
             archetypeCurrentIndex = totalPages - 1;
         }
@@ -901,12 +987,8 @@ function setupArchetypeCarousel() {
         updateCarousel();
     });
 
-    window.addEventListener('resize', () => {
-        // Yeniden boyutlandırmada karuseli güncelle
-        updateCarousel();
-    });
-
-    updateCarousel(); // İlk kurulum
+    window.addEventListener('resize', updateCarousel);
+    updateCarousel();
 }
 
 
@@ -944,6 +1026,74 @@ function showScreen(screenId) {
     resultsScreen.style.display = 'none';
     document.getElementById(screenId).style.display = 'block';
 }
+
+// --- SESLİ ASİSTAN MANTIĞI --- //
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition;
+if(SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'tr-TR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        voiceAssistantBtn.classList.add('listening');
+    };
+
+    recognition.onend = () => {
+        voiceAssistantBtn.classList.remove('listening');
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        voiceAssistantBtn.classList.remove('listening');
+    };
+
+    recognition.onresult = (event) => {
+        const command = event.results[0][0].transcript.toLowerCase().trim();
+        processVoiceCommand(command);
+    };
+}
+
+function speak(text) {
+    if ('speechSynthesis' in window) {
+        // Mevcut konuşmayı iptal et
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'tr-TR';
+        utterance.rate = 1.1;
+        window.speechSynthesis.speak(utterance);
+    }
+}
+
+function processVoiceCommand(command) {
+    console.log(`Command received: ${command}`);
+    if (command.includes('test nedir') || command.includes('amaç ne')) {
+        const aboutText = document.querySelector('#about-content').textContent;
+        speak("Elbette, testin amacı hakkında bilgi veriyorum. " + aboutText);
+    } else if (command.includes('arketipler nelerdir')) {
+        const archetypeNames = Object.values(archetypes).map(a => a.tr.name).join(', ');
+        speak(`Toplam 10 arketip bulunuyor: ${archetypeNames}. Detaylı bilgi için bir arketipin adını söyleyebilirsiniz.`);
+    } else if (command.includes('nasıl başlarım')) {
+        speak("Başlamak için adınızı yazın ve başla butonuna tıklayın.");
+    } else if (command.includes('yardım')) {
+        speak("Bana 'test nedir', 'arketipler nelerdir', 'nasıl başlarım' veya belirli bir arketipin adını sorabilirsiniz. Örneğin, 'Athena arketipi nedir?'");
+    } else {
+        let found = false;
+        for (const key in archetypes) {
+            const archetype = archetypes[key];
+            if (command.includes(archetype.tr.name.toLowerCase())) {
+                speak(`${archetype.tr.name}: ${archetype.tr.desc}`);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            speak("Üzgünüm, bu komutu anlayamadım. 'Yardım' diyerek mevcut komutları öğrenebilirsiniz.");
+        }
+    }
+}
+
 
 // --- OLAY DİNLEYİCİLERİ (EVENT LISTENERS) --- //
 document.addEventListener('DOMContentLoaded', () => {
@@ -1028,22 +1178,58 @@ btnRestart.addEventListener('click', () => {
     showScreen('welcome-screen');
 });
 
-// Tab Logic
-tabButtons.forEach(button => {
+// Modal Logic
+function openModal(initialTab) {
+    modalTabButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === initialTab);
+    });
+    modalTabContents.forEach(content => {
+        content.classList.toggle('active', content.id === `${initialTab}-content`);
+    });
+    infoModal.classList.add('active');
+}
+
+infoModalBtns.forEach(button => {
+    button.addEventListener('click', () => {
+        openModal(button.dataset.tab);
+    });
+});
+
+closeModalBtn.addEventListener('click', () => {
+    infoModal.classList.remove('active');
+});
+
+infoModal.addEventListener('click', (e) => {
+    if (e.target === infoModal) {
+        infoModal.classList.remove('active');
+    }
+});
+
+modalTabButtons.forEach(button => {
     button.addEventListener('click', () => {
         const targetTab = button.dataset.tab;
-
-        tabButtons.forEach(btn => btn.classList.remove('active'));
+        modalTabButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-
-        tabContents.forEach(content => {
-            if (content.id === `${targetTab}-content`) {
-                content.classList.add('active');
-            } else {
-                content.classList.remove('active');
-            }
+        modalTabContents.forEach(content => {
+            content.classList.toggle('active', content.id === `${targetTab}-content`);
         });
     });
+});
+
+// Voice Assistant Logic
+voiceAssistantBtn.addEventListener('click', () => {
+    if (recognition) {
+        try {
+            if(window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            recognition.start();
+        } catch(e) {
+            console.error("Recognition already started.", e);
+        }
+    } else {
+        alert("Üzgünüz, tarayıcınız ses tanımayı desteklemiyor.");
+    }
 });
 
 </script>
