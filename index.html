@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaratıcı Zeka Profili</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;500;700&display=swap');
+        
+        :root {
+            --neon-cyan: #00f6ff;
+            --neon-purple: #a855f7;
+            --neon-pink: #f472b6;
+            --dark-bg: #0a0f1f;
+            --dark-card: #111827;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background-color: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(0, 246, 255, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 85% 75%, rgba(168, 85, 247, 0.1) 0%, transparent 40%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+        
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+        
+        .card {
+            perspective: 1500px;
+            min-height: 520px;
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 20px rgba(0, 246, 255, 0.2), 0 0 40px rgba(168, 85, 247, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid;
+            background: linear-gradient(145deg, #1a243a, var(--dark-card));
+        }
+        
+        .card-front { border-image: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple)) 1; }
+        .card-back { border-image: linear-gradient(45deg, var(--neon-purple), var(--neon-pink)) 1; transform: rotateY(180deg); }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(0, 246, 255, 0.15);
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+            transition: width 0.5s ease;
+            border-radius: 4px;
+            box-shadow: 0 0 8px var(--neon-cyan);
+        }
+        
+        .btn-nav {
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .btn-nav:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 20px var(--neon-cyan);
+            border-color: var(--neon-cyan);
+        }
+        
+        .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(80%); }
+        
+        .stars {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+        
+        .glow { animation: glow 3s infinite alternate; }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(0, 246, 255, 0.4), 0 0 30px rgba(168, 85, 247, 0.3); }
+            to { box-shadow: 0 0 35px rgba(0, 246, 255, 0.6), 0 0 50px rgba(168, 85, 247, 0.5); }
+        }
+        
+        .floating { animation: floating 5s infinite ease-in-out; }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .task-input {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .task-input:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            background-color: #0f172a;
+            box-shadow: 0 0 15px rgba(0, 246, 255, 0.4);
+        }
+        .task-textarea { resize: vertical; min-height: 120px; }
+
+        .quiz-option {
+            background-color: rgba(30, 41, 59, 0.5);
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .quiz-option:hover {
+            background-color: rgba(56, 189, 248, 0.2);
+            border-color: var(--neon-cyan);
+        }
+        .quiz-option.selected {
+            background-color: rgba(0, 246, 255, 0.3);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 246, 255, 0.4);
+        }
+        
+        .shape-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .shape-option:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+        }
+        .shape-option.selected {
+             transform: scale(1.1);
+             filter: drop-shadow(0 0 15px var(--neon-cyan));
+        }
+
+        .gemini-feedback {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: rgba(0, 246, 255, 0.05);
+            border: 1px solid rgba(0, 246, 255, 0.2);
+            border-radius: 0.5rem;
+            text-align: left;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .loader {
+            border: 4px solid #334155;
+            border-top: 4px solid var(--neon-cyan);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="stars" id="stars"></div>
+
+    <!-- EKRAN 1: GİRİŞ EKRANI -->
+    <div id="welcome-screen" class="max-w-5xl mx-auto">
+        <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl glow">
+            <div class="flex flex-col items-center justify-center py-8">
+                <div class="mb-6 relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-2xl opacity-30 rounded-full"></div>
+                    <h1 class="tech-font text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-400 relative z-10 text-center" data-lang-key="welcome_title">
+                        YARATICI ZEKA PROFİLİ
+                    </h1>
+                </div>
+                <div class="w-full max-w-md mx-auto mb-8 relative">
+                    <div class="floating mb-8 w-40 h-40 md:w-48 md:h-48 mx-auto">
+                        <div id="abstract-shape-container" class="w-full h-full"></div>
+                    </div>
+                    <p class="text-cyan-200 text-center mb-6 text-base md:text-lg" data-lang-key="welcome_intro">
+                        Yaratıcı yaklaşımlarınızı keşfetmek ve potansiyelinizi ortaya çıkarmak için bu yolculuğa çıkın.
+                    </p>
+                    <div class="bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30 shadow-lg">
+                        <label for="user-name" class="block text-cyan-300 mb-2 tech-font" data-lang-key="enter_name">İSİM SOYİSİM:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="user-name" class="task-input flex-grow" placeholder="Unvan ve İsim">
+                            <button id="start-assessment" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-semibold tech-font flex items-center justify-center">
+                                <span data-lang-key="start_button">BAŞLA</span>
+                            </button>
+                        </div>
+                        <!-- IMPROVEMENT: Inline error message instead of alert -->
+                        <p id="name-error" class="text-red-400 text-sm mt-2 text-center hidden">Lütfen başlamadan önce bir isim girin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- EKRAN 2: DEĞERLENDİRME EKRANI -->
+    <div id="assessment-screen" class="max-w-5xl mx-auto hidden">
+        <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                 <div class="w-full md:w-1/3">
+                    <button id="btn-main-menu" class="btn-nav bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-4 py-2 font-medium shadow-sm hover:bg-slate-800 tech-font" data-lang-key="main_menu_button">ANA MENÜ</button>
+                </div>
+                <div class="w-full md:w-1/3 text-center order-first md:order-none">
+                    <h2 id="stage-title" class="tech-font text-xl text-cyan-300">Aşama 1: Keşif</h2>
+                </div>
+                <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                    <span class="bg-gradient-to-r from-cyan-900/50 to-purple-900/50 text-white py-2 px-4 rounded-full text-sm font-bold tech-font">
+                        <span data-lang-key="progress">İLERLEME</span>: <span id="overall-progress-count">1</span>/18
+                    </span>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <div class="progress-bar"><div class="progress" id="progress-bar" style="width: 5.5%"></div></div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-8">
+                <div class="card" id="current-card">
+                    <div class="card-inner">
+                        <div class="card-front p-4 md:p-6 flex flex-col h-full">
+                             <h3 class="text-2xl md:text-3xl font-bold mb-4 tech-font text-cyan-300" id="module-title">Modül Başlığı</h3>
+                             <div class="flex-grow overflow-auto pr-2 flex flex-col justify-center items-center" id="module-content-area">
+                                <!-- Modül içeriği buraya gelecek -->
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
+                <button id="btn-prev" class="btn-nav w-full sm:w-auto bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-6 py-3 font-medium flex items-center justify-center">ÖNCEKİ</button>
+                <button id="btn-next" class="btn-nav w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-medium flex items-center justify-center">SONRAKİ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EKRAN 3: SONUÇ EKRANI -->
+    <div id="results-screen" class="max-w-5xl mx-auto hidden">
+         <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
+            <h1 class="tech-font text-3xl md:text-4xl font-bold text-center mb-2 text-cyan-300" data-lang-key="results_title">Yaratıcı Profiliniz</h1>
+            <p class="text-center text-cyan-200 mb-8" id="user-name-results"></p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <div class="lg:col-span-1 text-center">
+                    <h3 class="tech-font text-xl text-purple-300 mb-2" data-lang-key="overall_success">Genel Başarı</h3>
+                    <div id="success-percentage" class="text-7xl font-bold text-white tech-font">0%</div>
+                </div>
+                <div class="lg:col-span-2">
+                     <canvas id="archetype-chart"></canvas>
+                </div>
+            </div>
+            
+            <div class="mt-8 bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30">
+                <h3 class="tech-font text-xl text-purple-300 mb-3" data-lang-key="profile_analysis">Profil Analizi</h3>
+                <div id="profile-analysis-text" class="text-slate-300 leading-relaxed"></div>
+            </div>
+
+            <div class="text-center mt-8">
+                 <button id="btn-restart" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-8 py-3 font-semibold tech-font" data-lang-key="restart_button">Yeniden Başla</button>
+            </div>
+         </div>
+    </div>
+
+<script>
+// --- GLOBAL DEĞİŞKENLER VE DOM ELEMENTLERİ --- //
+// Ekranlar
+const welcomeScreen = document.getElementById('welcome-screen');
+const assessmentScreen = document.getElementById('assessment-screen');
+const resultsScreen = document.getElementById('results-screen');
+
+// Butonlar ve Girdiler
+const startAssessmentBtn = document.getElementById('start-assessment');
+const userNameInput = document.getElementById('user-name');
+const nameError = document.getElementById('name-error'); // Error message element
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const btnMainMenu = document.getElementById('btn-main-menu');
+const btnRestart = document.getElementById('btn-restart');
+
+// Değerlendirme Ekranı Elementleri
+const stageTitle = document.getElementById('stage-title');
+const overallProgressCount = document.getElementById('overall-progress-count');
+const progressBar = document.getElementById('progress-bar');
+const moduleTitle = document.getElementById('module-title');
+const moduleContentArea = document.getElementById('module-content-area');
+
+// Sonuç Ekranı Elementleri
+const userNameResults = document.getElementById('user-name-results');
+const successPercentage = document.getElementById('success-percentage');
+const archetypeChartCanvas = document.getElementById('archetype-chart');
+const profileAnalysisText = document.getElementById('profile-analysis-text');
+const starsContainer = document.getElementById('stars');
+
+// Durum (State) Değişkenleri
+let currentModuleIndex = 0;
+let userAnswers = {}; // { moduleIndex: answer }
+let userArchetypeScores = {};
+let archetypeChart = null;
+
+// --- DİL VE VERİ YAPILARI --- //
+const translations = {
+    tr: {
+        welcome_title: "YARATICI ZEKA PROFİLİ",
+        welcome_intro: "Yaratıcı yaklaşımlarınızı keşfetmek ve potansiyelinizi ortaya çıkarmak için bu yolculuğa çıkın.",
+        enter_name: "İSİM SOYİSİM:",
+        start_button: "BAŞLA",
+        main_menu_button: "ANA MENÜ",
+        progress: "İLERLEME",
+        results_title: "Yaratıcı Profiliniz",
+        overall_success: "Genel Başarı",
+        profile_analysis: "Profil Analizi",
+        restart_button: "Yeniden Başla",
+        evaluating_feedback: "Değerlendiriliyor...",
+        gemini_feedback_title: "Yapay Zeka Geri Bildirimi:",
+        gemini_error: "Bir hata oluştu. Lütfen tekrar deneyin.",
+        evaluate_ideas_button: "✨ Fikirlerimi Değerlendir",
+    },
+    en: {
+        welcome_title: "CREATIVE INTELLIGENCE PROFILE",
+        welcome_intro: "Embark on this journey to discover your creative approaches and unlock your potential.",
+        enter_name: "FULL NAME:",
+        start_button: "START",
+        main_menu_button: "MAIN MENU",
+        progress: "PROGRESS",
+        results_title: "Your Creative Profile",
+        overall_success: "Overall Success",
+        profile_analysis: "Profile Analysis",
+        restart_button: "Restart",
+        evaluating_feedback: "Evaluating...",
+        gemini_feedback_title: "AI Feedback:",
+        gemini_error: "An error occurred. Please try again.",
+        evaluate_ideas_button: "✨ Evaluate My Ideas",
+    }
+};
+
+const archetypes = {
+    athena: { tr: "Athena", en: "Athena" },
+    apollo: { tr: "Apollo", en: "Apollo" },
+    hermes: { tr: "Hermes", en: "Hermes" },
+    hephaestus: { tr: "Hephaestus", en: "Hephaestus" },
+    prometheus: { tr: "Prometheus", en: "Prometheus" },
+    dionysus: { tr: "Dionysus", en: "Dionysus" },
+    janus: { tr: "Janus", en: "Janus" },
+    persephone: { tr: "Persephone", en: "Persephone" },
+    thalia: { tr: "Thalia", en: "Thalia" },
+    artemis: { tr: "Artemis", en: "Artemis" },
+};
+
+const assessmentModules = [
+    // --- AŞAMA 1: KEŞİF ---
+    { stage: 1, type: 'task', archetypes: ['athena', 'dionysus'], tr: { title: "Modül 1: Strateji vs. Sezgi", instruction: "Bir müzik festivali düzenliyorsunuz. A) Festivalin ana stratejisini (hedef kitle, bütçe) 2-3 cümlede özetleyin. B) Festival için 3 tane çılgın ve spontane etkinlik fikri listeleyin." }, en: { title: "Module 1: Strategy vs. Intuition", instruction: "You are organizing a music festival. A) Summarize the main strategy (target audience, budget) in 2-3 sentences. B) List 3 wild and spontaneous event ideas for the festival." } },
+    { stage: 1, type: 'task', archetypes: ['apollo', 'hephaestus'], tr: { title: "Modül 2: Uyum vs. Yapı", instruction: "Yeni bir akıllı saat tasarlıyorsunuz. A) Saatin logosu için bir konsept açıklayın. B) Saatin en önemli 3 teknik özelliğini listeleyin." }, en: { title: "Module 2: Harmony vs. Structure", instruction: "You are designing a new smartwatch. A) Describe a concept for the watch's logo. B) List the 3 most important technical features of the watch." } },
+    { stage: 1, type: 'task', archetypes: ['hermes', 'janus'], tr: { title: "Modül 3: Çeviklik vs. Yansıtma", instruction: "A) 'Bulut', 'Anahtar', 'Müzik' kelimeleri arasında bir bağlantı kurun. B) Geçmişte başarısız olan bir projeden çıkarılacak bir dersi yazın." }, en: { title: "Module 3: Agility vs. Reflection", instruction: "A) Make a connection between the words 'Cloud', 'Key', 'Music'. B) Write a lesson learned from a past failed project." } },
+    { stage: 1, type: 'task', archetypes: ['prometheus', 'artemis'], tr: { title: "Modül 4: Vizyon vs. Odak", instruction: "A) 2050'de eğitimin nasıl olacağını hayal edin. B) Bu vizyondaki tek bir soruna (örn: eşitsizlik) odaklanıp bir çözüm önerin." }, en: { title: "Module 4: Vision vs. Focus", instruction: "A) Imagine what education will be like in 2050. B) Focus on a single problem in that vision (e.g., inequality) and propose a solution." } },
+    { stage: 1, type: 'task', archetypes: ['persephone', 'thalia'], tr: { title: "Modül 5: Dönüşüm vs. Sosyal Zeka", instruction: "A) Eski bir gazeteyi hangi farklı amaçlarla kullanabilirsiniz? 3 fikir yazın. B) [Rastgele bir resim gösterilecek] Bu resme komik bir başlık bulun." }, en: { title: "Module 5: Transformation vs. Social Intelligence", instruction: "A) For what different purposes can you use an old newspaper? Write 3 ideas. B) [A random picture will be shown] Find a funny caption for this picture." } },
+    { stage: 1, type: 'intro', tr: { title: "Modül 6: Aşama 1 Tamamlandı", instruction: "Keşif aşamasını tamamladınız. Şimdi bilgilerinizi test etme zamanı. Bir sonraki aşama, senaryo bazlı sorulardan oluşan bir quiz'dir." }, en: { title: "Module 6: Stage 1 Complete", instruction: "You have completed the Discovery stage. Now it's time to test your knowledge. The next stage is a quiz with scenario-based questions." } },
+    
+    // --- AŞAMA 2: SINAMA (QUIZ) ---
+    { stage: 2, type: 'quiz', tr: { question: "Bir ürünün beklenmedik bir şekilde popülerliğini kaybetmesi durumunda, hangi yaklaşım öncelikli olmalıdır?", options: ["Pazar verilerini analiz edip strateji oluşturmak.", "Hızla yeni bir pazarlama kampanyası denemek.", "Ürünün tasarımını tamamen değiştirmek."], answer: 0, archetype: "athena" }, en: { question: "If a product unexpectedly loses its popularity, which approach should be prioritized?", options: ["Analyze market data and create a strategy.", "Quickly try a new marketing campaign.", "Completely change the product's design."], answer: 0, archetype: "athena" } },
+    { stage: 2, type: 'quiz', tr: { question: "Bir projenin estetik ve kullanıcı deneyimi eleştiriliyorsa, hangi arketipin yeteneğine en çok ihtiyaç duyulur?", options: ["Mühendislik ve yapısal sağlamlık.", "Uyum, denge ve sanatsal vizyon.", "Geçmiş hatalardan ders çıkarma."], answer: 1, archetype: "apollo" }, en: { question: "If a project's aesthetics and user experience are criticized, which archetype's skill is most needed?", options: ["Engineering and structural integrity.", "Harmony, balance, and artistic vision.", "Learning from past mistakes."], answer: 1, archetype: "apollo" } },
+    { stage: 2, type: 'quiz', tr: { question: "Kriz anında hızlı ve yaratıcı çözümler bulmak için hangi arketip en uygundur?", options: ["Gelecek için uzun vadeli planlar yapan.", "Farklı fikirler arasında anında köprü kuran.", "Belirli bir hedefe odaklanıp şaşmayan."], answer: 1, archetype: "hermes" }, en: { question: "Who is most suitable for finding quick and creative solutions in a crisis?", options: ["One who makes long-term plans for the future.", "One who instantly builds bridges between different ideas.", "One who focuses on a specific goal without wavering."], answer: 1, archetype: "hermes" } },
+    { stage: 2, type: 'quiz', tr: { question: "Soyut bir konsepti, çalışan bir prototipe dönüştürme görevi en çok hangi arketipe aittir?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" }, en: { question: "The task of turning an abstract concept into a working prototype belongs most to which archetype?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" } },
+    { stage: 2, type: 'quiz', tr: { question: "Mevcut bir teknolojiyi alıp, kimsenin aklına gelmeyen yepyeni bir alanda kullanma fikri hangi arketipi yansıtır?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" }, en: { question: "The idea of taking an existing technology and using it in a brand new field that no one has thought of reflects which archetype?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" } },
+    { stage: 2, type: 'intro', tr: { title: "Modül 12: Aşama 2 Tamamlandı", instruction: "Quiz aşamasını başarıyla geçtiniz. Son aşama, soyut düşünme ve desen tanıma yeteneğinizi ölçecek olan şekil eşleştirme testidir." }, en: { title: "Module 12: Stage 2 Complete", instruction: "You have successfully passed the Quiz stage. The final stage is a shape matching test that will measure your abstract thinking and pattern recognition abilities." } },
+
+    // --- AŞAMA 3: SENTEZ (ŞEKİL EŞLEŞTİRME) ---
+    { stage: 3, type: 'shape', archetype: 'apollo', tr: { title: "Modül 13: Simetriyi Bul" }, en: { title: "Module 13: Find the Symmetry" }, data: { problem: `<path d="M50 10 V 90 M 10 50 H 50" stroke="white" stroke-width="3"/>`, options: [`<path d="M50 10 V 90 M 90 50 H 50" stroke="white" stroke-width="3"/>`, `<path d="M10 10 L 50 50 L 10 90" stroke="white" stroke-width="3"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'hephaestus', tr: { title: "Modül 14: Parçayı Tamamla" }, en: { title: "Module 14: Complete the Part" }, data: { problem: `<path d="M20 20 H 80 V 80 H 60 V 40 H 40" stroke="white" stroke-width="3"/>`, options: [`<path d="M40 40 V 80 H 20 V 20" stroke="white" stroke-width="3"/>`, `<circle cx="50" cy="60" r="10" stroke="white" stroke-width="3"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'dionysus', tr: { title: "Modül 15: Deseni Boz" }, en: { title: "Module 15: Break the Pattern" }, data: { problem: `<g><circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/><circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/></g>`, options: [`<circle cx="50" cy="50" r="10"/>`, `<rect x="40" y="40" width="20" height="20"/>`], answer: 1 } },
+    { stage: 3, type: 'shape', archetype: 'hermes', tr: { title: "Modül 16: Köprüyü Kur" }, en: { title: "Module 16: Build the Bridge" }, data: { problem: `<g><circle cx="25" cy="50" r="15"/><rect x="65" y="35" width="30" height="30"/></g>`, options: [`<path d="M40 50 H 65"/>`, `<path d="M25 65 C 40 80, 60 80, 75 65"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'artemis', tr: { title: "Modül 17: Hedefi Bul" }, en: { title: "Module 17: Find the Target" }, data: { problem: `<g><circle cx="50" cy="50" r="40" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="30" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="20" stroke-dasharray="5 5"/></g>`, options: [`<circle cx="50" cy="50" r="5"/>`, `<path d="M50 10 V 90 M10 50 H 90"/>`], answer: 1 } },
+    { stage: 3, type: 'shape', archetype: 'prometheus', tr: { title: "Modül 18: Yeni Formu Yarat" }, en: { title: "Module 18: Create the New Form" }, data: { problem: `<g><rect x="20" y="40" width="20" height="20"/><circle cx="80" cy="50" r="10"/></g>`, options: [`<rect x="50" y="40" width="20" height="20"/>`, `<path d="M40 50 C 50 20, 70 80, 80 50"/>`], answer: 1 } }
+];
+
+// --- GEMINI API YARDIMCI FONKSİYONU --- //
+async function callGeminiAPI(prompt) {
+    // This function simulates a call to the Gemini API.
+    // In a real application, you would use the fetch API to make a request.
+    const apiKey = ""; // Provided by the Canvas runtime environment
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    const payload = {
+        contents: [{ role: "user", parts: [{ text: prompt }] }]
+    };
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            // This will be caught by the .catch block
+            throw new Error(`API call failed with status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+            return result.candidates[0].content.parts[0].text;
+        } else {
+            // This will also be caught by the .catch block
+            throw new Error("Invalid response structure from API.");
+        }
+    } catch (error) {
+        console.error("Error calling Gemini API:", error);
+        // Re-throw the error to be handled by the calling function
+        throw error;
+    }
+}
+
+
+// --- UYGULAMA MANTIĞI --- //
+
+/** Uygulamayı başlatır veya sıfırlar */
+function initializeApp() {
+    currentModuleIndex = 0;
+    userAnswers = {};
+    userArchetypeScores = Object.keys(archetypes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+    
+    showScreen('assessment-screen');
+    loadModule(currentModuleIndex);
+}
+
+/** Belirtilen indeksteki modülü yükler */
+function loadModule(index) {
+    const module = assessmentModules[index];
+    
+    stageTitle.textContent = `Aşama ${module.stage}: ${getStageName(module.stage)}`;
+    overallProgressCount.textContent = `${index + 1}/${assessmentModules.length}`;
+    progressBar.style.width = `${((index + 1) / assessmentModules.length) * 100}%`;
+    moduleTitle.textContent = module.tr.title;
+    moduleContentArea.innerHTML = '';
+
+    switch(module.type) {
+        case 'intro': createIntroModule(module); break;
+        case 'task': createTaskModule(module, index); break;
+        case 'quiz': createQuizModule(module, index); break;
+        case 'shape': createShapeModule(module, index); break;
+    }
+    updateNavButtons();
+}
+
+/** Tanıtım modülü arayüzünü oluşturur */
+function createIntroModule(module) {
+    moduleContentArea.innerHTML = `<p class="text-center text-lg text-slate-300 max-w-lg">${module.tr.instruction}</p>`;
+}
+
+/** Görev modülü arayüzünü (Gemini butonu ile) oluşturur */
+function createTaskModule(module, index) {
+    const savedAnswer = userAnswers[index] || "";
+    moduleContentArea.innerHTML = `
+        <div class="w-full max-w-xl text-center">
+            <p class="text-slate-300 mb-4">${module.tr.instruction}</p>
+            <textarea class="task-input task-textarea" data-module-index="${index}">${savedAnswer}</textarea>
+            <button class="btn-nav mt-4 bg-gradient-to-r from-teal-400 to-cyan-600 text-white rounded-lg px-5 py-2 gemini-eval-button" data-module-index="${index}">
+                ${translations.tr.evaluate_ideas_button}
+            </button>
+            <div class="gemini-feedback-container mt-4"></div>
+        </div>
+    `;
+}
+
+/** Quiz modülü arayüzünü oluşturur */
+function createQuizModule(module, index) {
+    const savedAnswer = userAnswers[index];
+    let optionsHTML = module.tr.options.map((option, i) => `
+        <div class="quiz-option w-full text-left p-4 rounded-lg ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
+            <span class="font-bold tech-font mr-2">${String.fromCharCode(65 + i)}:</span>
+            <span>${option}</span>
+        </div>
+    `).join('');
+
+    moduleContentArea.innerHTML = `
+        <div class="w-full max-w-2xl text-center">
+            <p class="text-slate-300 mb-6 text-lg">${module.tr.question}</p>
+            <div class="flex flex-col gap-4" id="quiz-options-container" data-module-index="${index}">${optionsHTML}</div>
+        </div>
+    `;
+}
+
+/** Şekil eşleştirme modülü arayüzünü oluşturur */
+function createShapeModule(module, index) {
+    const savedAnswer = userAnswers[index];
+    const optionsHTML = module.data.options.map((option, i) => `
+        <div class="shape-option p-4 ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
+            <svg viewBox="0 0 100 100" class="w-24 h-24" fill="none" stroke="white" stroke-width="3">${option}</svg>
+        </div>
+    `).join('');
+
+    moduleContentArea.innerHTML = `
+         <div class="w-full max-w-2xl text-center">
+            <p class="text-slate-300 mb-4 text-lg">Problemi en iyi çözen veya tamamlayan şekli seçin.</p>
+            <div class="mb-8 p-4"><svg viewBox="0 0 100 100" class="w-32 h-32 mx-auto" fill="none" stroke="var(--neon-cyan)" stroke-width="3">${module.data.problem}</svg></div>
+            <div class="flex justify-center gap-8" id="shape-options-container" data-module-index="${index}">${optionsHTML}</div>
+        </div>
+    `;
+}
+
+/** Navigasyon butonlarının durumunu günceller */
+function updateNavButtons() {
+    btnPrev.disabled = currentModuleIndex === 0;
+    btnNext.textContent = currentModuleIndex === assessmentModules.length - 1 ? 'SONUÇLARI GÖR' : 'SONRAKİ';
+}
+
+/** Sonuçları hesaplar ve gösterir */
+async function showResults() {
+    let correctQuizCount = 0;
+    let correctShapeCount = 0;
+    const totalQuizzes = assessmentModules.filter(m => m.type === 'quiz').length;
+    const totalShapes = assessmentModules.filter(m => m.type === 'shape').length;
+
+    userArchetypeScores = Object.keys(archetypes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+
+    assessmentModules.forEach((module, index) => {
+        const answer = userAnswers[index];
+        if (module.type === 'task' && answer && answer.trim() !== "") {
+            module.archetypes.forEach(arc => userArchetypeScores[arc]++);
+        }
+        if (module.type === 'quiz' && answer === module.answer) {
+            correctQuizCount++;
+            userArchetypeScores[module.archetype]++;
+        }
+        if (module.type === 'shape' && answer === module.data.answer) {
+            correctShapeCount++;
+            userArchetypeScores[module.archetype]++;
+        }
+    });
+
+    const totalSuccess = totalQuizzes + totalShapes > 0 ? ((correctQuizCount + correctShapeCount) / (totalQuizzes + totalShapes)) * 100 : 0;
+    
+    userNameResults.textContent = userNameInput.value.trim();
+    successPercentage.textContent = `${Math.round(totalSuccess)}%`;
+    
+    createRadarChart();
+    await generateProfileAnalysis(); // Gemini ile dinamik analiz
+
+    showScreen('results-screen');
+}
+
+/** Radar grafiğini oluşturur */
+function createRadarChart() {
+    if (archetypeChart) {
+        archetypeChart.destroy();
+    }
+    const labels = Object.values(archetypes).map(a => a.tr);
+    const data = Object.values(userArchetypeScores);
+
+    archetypeChart = new Chart(archetypeChartCanvas, {
+        type: 'radar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Yaratıcı Profiliniz',
+                data: data,
+                backgroundColor: 'rgba(0, 246, 255, 0.2)',
+                borderColor: 'rgba(0, 246, 255, 1)',
+                pointBackgroundColor: 'rgba(0, 246, 255, 1)',
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.2)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                    pointLabels: { color: '#e2e8f0', font: { size: 12 } },
+                    ticks: { display: false, stepSize: 1 }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+/** Gemini ile kişiselleştirilmiş profil analiz metnini oluşturur */
+async function generateProfileAnalysis() {
+    const analysisContainer = document.getElementById('profile-analysis-text');
+    analysisContainer.innerHTML = `<div class="loader"></div>`;
+
+    const sortedArchetypes = Object.entries(userArchetypeScores)
+        .sort(([,a],[,b]) => b-a)
+        .slice(0, 3)
+        .map(([key, score]) => `${archetypes[key].tr}: ${score} puan`);
+
+    const prompt = `Bir yaratıcılık koçu olarak, bir kullanıcının yaratıcı zeka profili test sonuçlarını analiz et. Kullanıcının en yüksek puan aldığı ilk 3 mitolojik arketip şunlar: ${sortedArchetypes.join(', ')}. Bu sonuçlara dayanarak, kullanıcının en güçlü 2-3 yaratıcı yönünü, bu yönlerin birbiriyle nasıl bir sinerji oluşturduğunu ve potansiyel gelişim alanlarını açıklayan, teşvik edici ve kişisel bir analiz metni yaz. Analizi 2-3 paragrafta özetle.`;
+
+    try {
+        const analysis = await callGeminiAPI(prompt);
+        analysisContainer.innerHTML = `<p>${analysis}</p>`;
+    } catch (error) {
+        // IMPROVEMENT: Fun and thematic error message
+        analysisContainer.innerHTML = `
+            <div class="text-center text-amber-300 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <p class="text-3xl mb-2 animate-pulse">📡</p>
+                <p class="font-bold tech-font text-lg">KOZMİK PARAZİT!</p>
+                <p class="text-sm mt-1">Yaratıcı profil sinyalleri geçici olarak engellendi. Lütfen birazdan tekrar deneyerek evrenin sırlarını çözmemize yardımcı olun.</p>
+            </div>
+        `;
+    }
+}
+
+/** Gemini ile görev cevaplarını değerlendirir */
+async function handleIdeaEvaluation(event) {
+    const button = event.target;
+    const moduleIndex = parseInt(button.dataset.moduleIndex);
+    const module = assessmentModules[moduleIndex];
+    const textarea = document.querySelector(`textarea[data-module-index="${moduleIndex}"]`);
+    const ideas = textarea.value;
+    const feedbackContainer = button.nextElementSibling;
+
+    if (!ideas.trim()) return;
+
+    feedbackContainer.innerHTML = `<div class="loader"></div><p>${translations.tr.evaluating_feedback}</p>`;
+    button.disabled = true;
+
+    const prompt = `Bir yaratıcılık eğitmeni olarak, kullanıcının şu göreve verdiği cevabı değerlendir: "${module.tr.instruction}". Cevap: "${ideas}". Cevabı, görevin ilişkili olduğu ${module.archetypes.map(a => archetypes[a].tr).join(' ve ')} arketipleri açısından analiz et. Güçlü yönleri ve gelişim alanlarını belirten kısa, yapıcı bir geri bildirim yaz.`;
+
+    try {
+        const feedback = await callGeminiAPI(prompt);
+        feedbackContainer.innerHTML = `<div class="gemini-feedback"><strong>${translations.tr.gemini_feedback_title}</strong><br>${feedback}</div>`;
+    } catch (error) {
+        feedbackContainer.innerHTML = `<div class="gemini-feedback text-red-400">${translations.tr.gemini_error}</div>`;
+    } finally {
+        button.disabled = false;
+    }
+}
+
+/** Aşama ismini döndürür */
+function getStageName(stage) {
+    if (stage === 1) return "Keşif";
+    if (stage === 2) return "Sınama";
+    if (stage === 3) return "Sentez";
+    return "";
+}
+
+/** Arka plan yıldızlarını oluşturur */
+function createStars() {
+    const starsContainer = document.getElementById('stars');
+    if (!starsContainer) return;
+    for (let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.animationDelay = `${Math.random() * 4}s`;
+        star.style.animationDuration = `${3 + Math.random() * 3}s`;
+        starsContainer.appendChild(star);
+    }
+}
+
+/** 3D şekli başlatır */
+function initAbstractShape() {
+    const container = document.getElementById('abstract-shape-container');
+    if (!container) return;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+    const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+    const material = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.7, roughness: 0.2, emissive: 0x00f6ff, emissiveIntensity: 0.2 });
+    const shape = new THREE.Mesh(geometry, material);
+    scene.add(shape);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 1);
+    pointLight.position.set(5, 5, 5);
+    scene.add(pointLight);
+    camera.position.z = 3.5;
+    function animate() {
+        requestAnimationFrame(animate);
+        shape.rotation.x += 0.003;
+        shape.rotation.y += 0.005;
+        renderer.render(scene, camera);
+    }
+    animate();
+}
+
+function showScreen(screenId) {
+    welcomeScreen.style.display = 'none';
+    assessmentScreen.style.display = 'none';
+    resultsScreen.style.display = 'none';
+    document.getElementById(screenId).style.display = 'block';
+}
+
+// --- OLAY DİNLEYİCİLERİ (EVENT LISTENERS) --- //
+document.addEventListener('DOMContentLoaded', () => {
+    createStars();
+    initAbstractShape();
+    showScreen('welcome-screen');
+});
+
+// IMPROVEMENT: Replaced alert with inline validation
+startAssessmentBtn.addEventListener('click', () => {
+    const userName = userNameInput.value.trim();
+    if (!userName) {
+        nameError.classList.remove('hidden');
+        userNameInput.classList.add('border-red-500');
+        userNameInput.focus();
+        return;
+    }
+    initializeApp();
+});
+
+// IMPROVEMENT: Hide error message when user starts typing
+userNameInput.addEventListener('input', () => {
+    if (userNameInput.value.trim() !== '') {
+        nameError.classList.add('hidden');
+        userNameInput.classList.remove('border-red-500');
+    }
+});
+
+
+btnNext.addEventListener('click', () => {
+    const taskTextarea = document.querySelector(`textarea[data-module-index="${currentModuleIndex}"]`);
+    if (taskTextarea) {
+        userAnswers[currentModuleIndex] = taskTextarea.value;
+    }
+
+    if (currentModuleIndex < assessmentModules.length - 1) {
+        currentModuleIndex++;
+        loadModule(currentModuleIndex);
+    } else {
+        showResults();
+    }
+});
+
+btnPrev.addEventListener('click', () => {
+    if (currentModuleIndex > 0) {
+        currentModuleIndex--;
+        loadModule(currentModuleIndex);
+    }
+});
+
+// Dinamik olarak oluşturulan elementler için olay delegasyonu
+moduleContentArea.addEventListener('click', (e) => {
+    // Quiz seçenekleri
+    const selectedQuizOption = e.target.closest('.quiz-option');
+    if (selectedQuizOption) {
+        const container = e.target.closest('#quiz-options-container');
+        const moduleIndex = parseInt(container.dataset.moduleIndex);
+        const selectedIndex = parseInt(selectedQuizOption.dataset.optionIndex);
+        userAnswers[moduleIndex] = selectedIndex;
+        container.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+        selectedQuizOption.classList.add('selected');
+    }
+
+    // Şekil seçenekleri
+    const selectedShapeOption = e.target.closest('.shape-option');
+    if (selectedShapeOption) {
+        const container = e.target.closest('#shape-options-container');
+        const moduleIndex = parseInt(container.dataset.moduleIndex);
+        const selectedIndex = parseInt(selectedShapeOption.dataset.optionIndex);
+        userAnswers[moduleIndex] = selectedIndex;
+        container.querySelectorAll('.shape-option').forEach(opt => opt.classList.remove('selected'));
+        selectedShapeOption.classList.add('selected');
+    }
+
+    // Gemini değerlendirme butonu
+    if (e.target.classList.contains('gemini-eval-button')) {
+        handleIdeaEvaluation(e);
+    }
+});
+
+btnMainMenu.addEventListener('click', () => showScreen('welcome-screen'));
+btnRestart.addEventListener('click', () => {
+    // Reset name input and error for a clean restart
+    userNameInput.value = '';
+    nameError.classList.add('hidden');
+    userNameInput.classList.remove('border-red-500');
+    showScreen('welcome-screen');
+});
+
+</script>
+</body>
+</html>
