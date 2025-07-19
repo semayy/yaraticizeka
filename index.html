@@ -201,111 +201,217 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Tab Styling */
+        .tab-button {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active, .tab-button:hover {
+            background-color: var(--dark-card);
+            color: var(--neon-cyan);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 246, 255, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Archetype Card Styling */
+        .archetype-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+            backdrop-filter: blur(3px);
+        }
+        .archetype-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 0 25px rgba(0, 246, 255, 0.3), 0 0 10px rgba(168, 85, 247, 0.2);
+            border-color: var(--neon-cyan);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        .archetype-icon-container {
+            margin-bottom: 1rem;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--neon-cyan);
+        }
+        .archetype-icon-container svg {
+            width: 50px;
+            height: 50px;
+            transition: all 0.3s ease;
+        }
+        .archetype-card:hover .archetype-icon-container svg {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+        }
+
     </style>
 </head>
-<body class="p-4 sm:p-6 md:p-8">
+<body class="p-4 sm:p-6 md:p-8 flex flex-col min-h-screen">
     <div class="stars" id="stars"></div>
 
-    <!-- EKRAN 1: GİRİŞ EKRANI -->
-    <div id="welcome-screen" class="max-w-5xl mx-auto">
-        <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl glow">
-            <div class="flex flex-col items-center justify-center py-8">
-                <div class="mb-6 relative">
-                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-2xl opacity-30 rounded-full"></div>
-                    <h1 class="tech-font text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-400 relative z-10 text-center" data-lang-key="welcome_title">
-                        YARATICI ZEKA PROFİLİ
-                    </h1>
-                </div>
-                <div class="w-full max-w-md mx-auto mb-8 relative">
-                    <div class="floating mb-8 w-40 h-40 md:w-48 md:h-48 mx-auto">
-                        <div id="abstract-shape-container" class="w-full h-full"></div>
+    <main class="flex-grow">
+        <!-- EKRAN 1: GİRİŞ EKRANI -->
+        <div id="welcome-screen" class="max-w-5xl mx-auto">
+            <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl glow">
+                <div class="flex flex-col items-center justify-center py-8">
+                    <div class="mb-6 relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-2xl opacity-30 rounded-full"></div>
+                        <h1 class="tech-font text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-400 relative z-10 text-center" data-lang-key="welcome_title">
+                            YARATICI ZEKA PROFİLİ
+                        </h1>
                     </div>
-                    <p class="text-cyan-200 text-center mb-6 text-base md:text-lg" data-lang-key="welcome_intro">
-                        Yaratıcı yaklaşımlarınızı keşfetmek ve potansiyelinizi ortaya çıkarmak için bu yolculuğa çıkın.
-                    </p>
-                    <div class="bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30 shadow-lg">
-                        <label for="user-name" class="block text-cyan-300 mb-2 tech-font" data-lang-key="enter_name">İSİM SOYİSİM:</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <input type="text" id="user-name" class="task-input flex-grow" placeholder="Unvan ve İsim">
-                            <button id="start-assessment" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-semibold tech-font flex items-center justify-center">
-                                <span data-lang-key="start_button">BAŞLA</span>
+                    <div class="w-full max-w-md mx-auto mb-8 relative">
+                        <div class="floating mb-8 w-40 h-40 md:w-48 md:h-48 mx-auto">
+                            <div id="abstract-shape-container" class="w-full h-full"></div>
+                        </div>
+                        <p class="text-cyan-200 text-center mb-6 text-base md:text-lg" data-lang-key="welcome_intro">
+                            Yaratıcı yaklaşımlarınızı keşfetmek ve potansiyelinizi ortaya çıkarmak için bu yolculuğa çıkın.
+                        </p>
+                        <div class="bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30 shadow-lg">
+                            <label for="user-name" class="block text-cyan-300 mb-2 tech-font" data-lang-key="enter_name">İSİM SOYİSİM:</label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="text" id="user-name" class="task-input flex-grow" placeholder="Unvan ve İsim">
+                                <button id="start-assessment" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-semibold tech-font flex items-center justify-center">
+                                    <span data-lang-key="start_button">BAŞLA</span>
+                                </button>
+                            </div>
+                            <p id="name-error" class="text-red-400 text-sm mt-2 text-center hidden">Lütfen başlamadan önce bir isim girin.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- EKRAN 2: DEĞERLENDİRME EKRANI -->
+        <div id="assessment-screen" class="max-w-5xl mx-auto hidden">
+            <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                     <div class="w-full md:w-1/3">
+                        <button id="btn-main-menu" class="btn-nav bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-4 py-2 font-medium shadow-sm hover:bg-slate-800 tech-font" data-lang-key="main_menu_button">ANA MENÜ</button>
+                    </div>
+                    <div class="w-full md:w-1/3 text-center order-first md:order-none">
+                        <h2 id="stage-title" class="tech-font text-xl text-cyan-300">Aşama 1: Keşif</h2>
+                    </div>
+                    <div class="w-full md:w-1/3 flex justify-center md:justify-end">
+                        <span class="bg-gradient-to-r from-cyan-900/50 to-purple-900/50 text-white py-2 px-4 rounded-full text-sm font-bold tech-font">
+                            <span data-lang-key="progress">İLERLEME</span>: <span id="overall-progress-count">1</span>/18
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="progress-bar"><div class="progress" id="progress-bar" style="width: 5.5%"></div></div>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-8">
+                    <div class="card" id="current-card">
+                        <div class="card-inner">
+                            <div class="card-front p-4 md:p-6 flex flex-col h-full">
+                                 <h3 class="text-2xl md:text-3xl font-bold mb-4 tech-font text-cyan-300" id="module-title">Modül Başlığı</h3>
+                                 <div class="flex-grow overflow-auto pr-2 flex flex-col justify-center items-center" id="module-content-area">
+                                    <!-- Modül içeriği buraya gelecek -->
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
+                    <button id="btn-prev" class="btn-nav w-full sm:w-auto bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-6 py-3 font-medium flex items-center justify-center">ÖNCEKİ</button>
+                    <button id="btn-next" class="btn-nav w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-medium flex items-center justify-center">SONRAKİ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EKRAN 3: SONUÇ EKRANI -->
+        <div id="results-screen" class="max-w-5xl mx-auto hidden">
+             <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
+                <h1 class="tech-font text-3xl md:text-4xl font-bold text-center mb-2 text-cyan-300" data-lang-key="results_title">Yaratıcı Profiliniz</h1>
+                <p class="text-center text-cyan-200 mb-8" id="user-name-results"></p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                    <div class="lg:col-span-1 text-center">
+                        <h3 class="tech-font text-xl text-purple-300 mb-2" data-lang-key="overall_success">Genel Başarı</h3>
+                        <div id="success-percentage" class="text-7xl font-bold text-white tech-font">0%</div>
+                    </div>
+                    <div class="lg:col-span-2">
+                         <canvas id="archetype-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mt-8 bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30">
+                    <h3 class="tech-font text-xl text-purple-300 mb-3" data-lang-key="profile_analysis">Profil Analizi</h3>
+                    <div id="profile-analysis-text" class="text-slate-300 leading-relaxed"></div>
+                </div>
+
+                <div class="text-center mt-8">
+                     <button id="btn-restart" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-8 py-3 font-semibold tech-font" data-lang-key="restart_button">Yeniden Başla</button>
+                </div>
+             </div>
+        </div>
+
+        <!-- HAKKINDA BÖLÜMÜ -->
+        <div id="about-section" class="max-w-5xl mx-auto mt-12">
+            <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8">
+                <div class="flex flex-wrap justify-center border-b border-slate-700 mb-6">
+                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg active" data-tab="archetypes">Arketipler</button>
+                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="about">Hakkında</button>
+                    <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="contact">İletişim</button>
+                </div>
+                <div id="tab-content-container">
+                    <div id="archetypes-content" class="tab-content active">
+                        <div class="relative">
+                            <!-- Carousel Wrapper -->
+                            <div id="archetype-carousel-wrapper" class="overflow-hidden">
+                                <!-- Carousel Track -->
+                                <div id="archetype-carousel" class="flex transition-transform duration-500 ease-in-out">
+                                    <!-- Archetype Cards will be dynamically inserted here -->
+                                </div>
+                            </div>
+                            <!-- Carousel Navigation -->
+                            <button id="archetype-prev" class="absolute top-1/2 -left-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <button id="archetype-next" class="absolute top-1/2 -right-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </button>
                         </div>
-                        <!-- IMPROVEMENT: Inline error message instead of alert -->
-                        <p id="name-error" class="text-red-400 text-sm mt-2 text-center hidden">Lütfen başlamadan önce bir isim girin.</p>
+                    </div>
+                    <div id="about-content" class="tab-content">
+                        <p class="text-slate-300 leading-relaxed">Bu sayfada yer alan bilgiler, kaynak gösterilen içeriklerden derlenmiştir. Sertifikanın yasal bir geçerliliği yoktur, sadece eğitim amacıyla ve kar gütmeden hazırlanmıştır.</p>
+                    </div>
+                    <div id="contact-content" class="tab-content">
+                        <p class="text-slate-300 leading-relaxed mb-2">Sorularınız veya geri bildirimleriniz için LinkedIn üzerinden iletişime geçebilirsiniz:</p>
+                        <a href="https://linkedin.com/in/semayy" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 tech-font transition-colors">
+                            linkedin.com/in/semayy
+                        </a>
+                        <p class="text-slate-300 mt-4">Semanur Ayyıldız<br><span class="text-sm text-slate-400">Görsel İletişim Tasarımı ve Dijital Dönüşüm Uzmanı</span></p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- EKRAN 2: DEĞERLENDİRME EKRANI -->
-    <div id="assessment-screen" class="max-w-5xl mx-auto hidden">
-        <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                 <div class="w-full md:w-1/3">
-                    <button id="btn-main-menu" class="btn-nav bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-4 py-2 font-medium shadow-sm hover:bg-slate-800 tech-font" data-lang-key="main_menu_button">ANA MENÜ</button>
-                </div>
-                <div class="w-full md:w-1/3 text-center order-first md:order-none">
-                    <h2 id="stage-title" class="tech-font text-xl text-cyan-300">Aşama 1: Keşif</h2>
-                </div>
-                <div class="w-full md:w-1/3 flex justify-center md:justify-end">
-                    <span class="bg-gradient-to-r from-cyan-900/50 to-purple-900/50 text-white py-2 px-4 rounded-full text-sm font-bold tech-font">
-                        <span data-lang-key="progress">İLERLEME</span>: <span id="overall-progress-count">1</span>/18
-                    </span>
-                </div>
-            </div>
-            
-            <div class="mb-6">
-                <div class="progress-bar"><div class="progress" id="progress-bar" style="width: 5.5%"></div></div>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-8">
-                <div class="card" id="current-card">
-                    <div class="card-inner">
-                        <div class="card-front p-4 md:p-6 flex flex-col h-full">
-                             <h3 class="text-2xl md:text-3xl font-bold mb-4 tech-font text-cyan-300" id="module-title">Modül Başlığı</h3>
-                             <div class="flex-grow overflow-auto pr-2 flex flex-col justify-center items-center" id="module-content-area">
-                                <!-- Modül içeriği buraya gelecek -->
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
-                <button id="btn-prev" class="btn-nav w-full sm:w-auto bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-6 py-3 font-medium flex items-center justify-center">ÖNCEKİ</button>
-                <button id="btn-next" class="btn-nav w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-medium flex items-center justify-center">SONRAKİ</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <!-- EKRAN 3: SONUÇ EKRANI -->
-    <div id="results-screen" class="max-w-5xl mx-auto hidden">
-         <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
-            <h1 class="tech-font text-3xl md:text-4xl font-bold text-center mb-2 text-cyan-300" data-lang-key="results_title">Yaratıcı Profiliniz</h1>
-            <p class="text-center text-cyan-200 mb-8" id="user-name-results"></p>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-                <div class="lg:col-span-1 text-center">
-                    <h3 class="tech-font text-xl text-purple-300 mb-2" data-lang-key="overall_success">Genel Başarı</h3>
-                    <div id="success-percentage" class="text-7xl font-bold text-white tech-font">0%</div>
-                </div>
-                <div class="lg:col-span-2">
-                     <canvas id="archetype-chart"></canvas>
-                </div>
-            </div>
-            
-            <div class="mt-8 bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30">
-                <h3 class="tech-font text-xl text-purple-300 mb-3" data-lang-key="profile_analysis">Profil Analizi</h3>
-                <div id="profile-analysis-text" class="text-slate-300 leading-relaxed"></div>
-            </div>
-
-            <div class="text-center mt-8">
-                 <button id="btn-restart" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-8 py-3 font-semibold tech-font" data-lang-key="restart_button">Yeniden Başla</button>
-            </div>
-         </div>
-    </div>
+    <footer class="text-center text-slate-500 text-xs p-4 mt-8">
+        © 2025 Tüm Hakları Saklıdır. Bu içerik eğitim amaçlıdır.
+    </footer>
 
 <script>
 // --- GLOBAL DEĞİŞKENLER VE DOM ELEMENTLERİ --- //
@@ -317,7 +423,7 @@ const resultsScreen = document.getElementById('results-screen');
 // Butonlar ve Girdiler
 const startAssessmentBtn = document.getElementById('start-assessment');
 const userNameInput = document.getElementById('user-name');
-const nameError = document.getElementById('name-error'); // Error message element
+const nameError = document.getElementById('name-error');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
 const btnMainMenu = document.getElementById('btn-main-menu');
@@ -337,11 +443,20 @@ const archetypeChartCanvas = document.getElementById('archetype-chart');
 const profileAnalysisText = document.getElementById('profile-analysis-text');
 const starsContainer = document.getElementById('stars');
 
+// Tab & Carousel Elementleri
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabContents = document.querySelectorAll('.tab-content');
+const archetypeCarousel = document.getElementById('archetype-carousel');
+const archetypePrevBtn = document.getElementById('archetype-prev');
+const archetypeNextBtn = document.getElementById('archetype-next');
+
+
 // Durum (State) Değişkenleri
 let currentModuleIndex = 0;
 let userAnswers = {}; // { moduleIndex: answer }
 let userArchetypeScores = {};
 let archetypeChart = null;
+let archetypeCurrentIndex = 0;
 
 // --- DİL VE VERİ YAPILARI --- //
 const translations = {
@@ -380,16 +495,46 @@ const translations = {
 };
 
 const archetypes = {
-    athena: { tr: "Athena", en: "Athena" },
-    apollo: { tr: "Apollo", en: "Apollo" },
-    hermes: { tr: "Hermes", en: "Hermes" },
-    hephaestus: { tr: "Hephaestus", en: "Hephaestus" },
-    prometheus: { tr: "Prometheus", en: "Prometheus" },
-    dionysus: { tr: "Dionysus", en: "Dionysus" },
-    janus: { tr: "Janus", en: "Janus" },
-    persephone: { tr: "Persephone", en: "Persephone" },
-    thalia: { tr: "Thalia", en: "Thalia" },
-    artemis: { tr: "Artemis", en: "Artemis" },
+    athena: { 
+        tr: { name: "Athena", desc: "Stratejik ve mantıksal yaratıcılık. Problemleri analiz eder, planlar ve net çözümler üretir." },
+        icon: `<path d="M50 10L80 80H20L50 10Z" stroke-width="5"/><path d="M35 60H65" stroke-width="5"/>`
+    },
+    apollo: { 
+        tr: { name: "Apollo", desc: "Uyum ve estetik yaratıcılık. Güzellik, denge ve düzen arar. Sanatsal ve tasarımsal yetenekleri temsil eder." },
+        icon: `<circle cx="50" cy="50" r="30" stroke-width="5"/><circle cx="50" cy="50" r="15" stroke-width="5"/>`
+    },
+    hermes: { 
+        tr: { name: "Hermes", desc: "Çevik ve birleştirici yaratıcılık. Fikirler arasında hızla bağlantı kurar, iletişimde ustadır ve yenilikleri yayar." },
+        icon: `<path d="M20 80L50 50L20 20M80 80L50 50L80 20" stroke-width="5"/>`
+    },
+    hephaestus: { 
+        tr: { name: "Hephaestus", desc: "İnşa eden ve üreten yaratıcılık. Soyut fikirleri somut projelere dönüştürür, zanaatkarlık ve mühendislik becerileri yüksektir." },
+        icon: `<rect x="20" y="20" width="60" height="60" rx="5" stroke-width="5"/><rect x="35" y="35" width="30" height="30" rx="5" stroke-width="5" fill="currentColor"/>`
+    },
+    prometheus: { 
+        tr: { name: "Prometheus", desc: "Vizyoner ve kural yıkan yaratıcılık. Geleceği şekillendirir, radikal yenilikler peşindedir ve mevcut durumu sorgular." },
+        icon: `<path d="M50 10V90 M10 50H90 M25 25L75 75 M25 75L75 25" stroke-width="5" stroke-linecap="round"/>`
+    },
+    dionysus: { 
+        tr: { name: "Dionysus", desc: "Sezgisel ve spontane yaratıcılık. Kuralların dışında düşünür, kaostan beslenir ve beklenmedik fikirler ortaya atar." },
+        icon: `<path d="M20 20C40 80 60 10 80 90" stroke-width="5" stroke-linecap="round"/>`
+    },
+    janus: { 
+        tr: { name: "Janus", desc: "Yansıtıcı ve çift yönlü yaratıcılık. Geçmişten ders alıp geleceğe uygular, zıtlıklar arasında denge kurar." },
+        icon: `<path d="M50 10V90 M50 50L20 30V70L50 50L80 30V70L50 50" stroke-width="5"/>`
+    },
+    persephone: { 
+        tr: { name: "Persephone", desc: "Dönüştürücü yaratıcılık. Mevcut olanı alır ve ona yepyeni bir anlam veya işlev kazandırır." },
+        icon: `<path d="M20 50H80" stroke-width="5"/><path d="M20 50C40 20 60 80 80 50" stroke-width="5" stroke-dasharray="10 5"/>`
+    },
+    thalia: { 
+        tr: { name: "Thalia", desc: "Sosyal ve esprili yaratıcılık. İnsanları bir araya getirir, mizahtan ve oyundan beslenir, sosyal zekası yüksektir." },
+        icon: `<circle cx="30" cy="30" r="15" stroke-width="5"/><circle cx="70" cy="30" r="15" stroke-width="5"/><path d="M30 70C40 50 60 50 70 70" stroke-width="5" stroke-linecap="round"/>`
+    },
+    artemis: { 
+        tr: { name: "Artemis", desc: "Odaklanmış ve hedefe yönelik yaratıcılık. Belirli bir hedefe kilitlenir ve o hedefe ulaşmak için hassas ve etkili çözümler geliştirir." },
+        icon: `<path d="M90 50L30 50 M70 30L90 50L70 70" stroke-width="5" stroke-linecap="round"/><circle cx="20" cy="50" r="5" fill="currentColor"/>`
+    },
 };
 
 const assessmentModules = [
@@ -420,9 +565,7 @@ const assessmentModules = [
 
 // --- GEMINI API YARDIMCI FONKSİYONU --- //
 async function callGeminiAPI(prompt) {
-    // This function simulates a call to the Gemini API.
-    // In a real application, you would use the fetch API to make a request.
-    const apiKey = ""; // Provided by the Canvas runtime environment
+    const apiKey = ""; 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     
     const payload = {
@@ -437,7 +580,6 @@ async function callGeminiAPI(prompt) {
         });
 
         if (!response.ok) {
-            // This will be caught by the .catch block
             throw new Error(`API call failed with status: ${response.status}`);
         }
 
@@ -446,12 +588,10 @@ async function callGeminiAPI(prompt) {
         if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
             return result.candidates[0].content.parts[0].text;
         } else {
-            // This will also be caught by the .catch block
             throw new Error("Invalid response structure from API.");
         }
     } catch (error) {
         console.error("Error calling Gemini API:", error);
-        // Re-throw the error to be handled by the calling function
         throw error;
     }
 }
@@ -580,7 +720,7 @@ async function showResults() {
     successPercentage.textContent = `${Math.round(totalSuccess)}%`;
     
     createRadarChart();
-    await generateProfileAnalysis(); // Gemini ile dinamik analiz
+    await generateProfileAnalysis();
 
     showScreen('results-screen');
 }
@@ -590,7 +730,7 @@ function createRadarChart() {
     if (archetypeChart) {
         archetypeChart.destroy();
     }
-    const labels = Object.values(archetypes).map(a => a.tr);
+    const labels = Object.values(archetypes).map(a => a.tr.name);
     const data = Object.values(userArchetypeScores);
 
     archetypeChart = new Chart(archetypeChartCanvas, {
@@ -629,7 +769,7 @@ async function generateProfileAnalysis() {
     const sortedArchetypes = Object.entries(userArchetypeScores)
         .sort(([,a],[,b]) => b-a)
         .slice(0, 3)
-        .map(([key, score]) => `${archetypes[key].tr}: ${score} puan`);
+        .map(([key, score]) => `${archetypes[key].tr.name}: ${score} puan`);
 
     const prompt = `Bir yaratıcılık koçu olarak, bir kullanıcının yaratıcı zeka profili test sonuçlarını analiz et. Kullanıcının en yüksek puan aldığı ilk 3 mitolojik arketip şunlar: ${sortedArchetypes.join(', ')}. Bu sonuçlara dayanarak, kullanıcının en güçlü 2-3 yaratıcı yönünü, bu yönlerin birbiriyle nasıl bir sinerji oluşturduğunu ve potansiyel gelişim alanlarını açıklayan, teşvik edici ve kişisel bir analiz metni yaz. Analizi 2-3 paragrafta özetle.`;
 
@@ -637,7 +777,6 @@ async function generateProfileAnalysis() {
         const analysis = await callGeminiAPI(prompt);
         analysisContainer.innerHTML = `<p>${analysis}</p>`;
     } catch (error) {
-        // IMPROVEMENT: Fun and thematic error message
         analysisContainer.innerHTML = `
             <div class="text-center text-amber-300 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
                 <p class="text-3xl mb-2 animate-pulse">📡</p>
@@ -662,7 +801,7 @@ async function handleIdeaEvaluation(event) {
     feedbackContainer.innerHTML = `<div class="loader"></div><p>${translations.tr.evaluating_feedback}</p>`;
     button.disabled = true;
 
-    const prompt = `Bir yaratıcılık eğitmeni olarak, kullanıcının şu göreve verdiği cevabı değerlendir: "${module.tr.instruction}". Cevap: "${ideas}". Cevabı, görevin ilişkili olduğu ${module.archetypes.map(a => archetypes[a].tr).join(' ve ')} arketipleri açısından analiz et. Güçlü yönleri ve gelişim alanlarını belirten kısa, yapıcı bir geri bildirim yaz.`;
+    const prompt = `Bir yaratıcılık eğitmeni olarak, kullanıcının şu göreve verdiği cevabı değerlendir: "${module.tr.instruction}". Cevap: "${ideas}". Cevabı, görevin ilişkili olduğu ${module.archetypes.map(a => archetypes[a].tr.name).join(' ve ')} arketipleri açısından analiz et. Güçlü yönleri ve gelişim alanlarını belirten kısa, yapıcı bir geri bildirim yaz.`;
 
     try {
         const feedback = await callGeminiAPI(prompt);
@@ -685,7 +824,7 @@ function getStageName(stage) {
 /** Arka plan yıldızlarını oluşturur */
 function createStars() {
     const starsContainer = document.getElementById('stars');
-    if (!starsContainer) return;
+    if (!starsContainer || starsContainer.children.length > 0) return;
     for (let i = 0; i < 100; i++) {
         const star = document.createElement('div');
         star.className = 'star';
@@ -700,15 +839,85 @@ function createStars() {
     }
 }
 
+/** Arketip kartlarını oluşturur */
+function createArchetypeCards() {
+    const container = document.getElementById('archetype-carousel');
+    if (!container || container.children.length > 0) return; // Sadece bir kere oluştur
+    
+    let cardsHTML = '';
+    for (const key in archetypes) {
+        const archetype = archetypes[key];
+        cardsHTML += `
+            <div class="flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-3">
+                <div class="archetype-card h-full flex flex-col">
+                    <div class="archetype-icon-container">
+                        <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">${archetype.icon}</svg>
+                    </div>
+                    <h4 class="tech-font text-purple-300 text-lg mb-2">${archetype.tr.name}</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">${archetype.tr.desc}</p>
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = cardsHTML;
+}
+
+/** Arketip karuselini ayarlar */
+function setupArchetypeCarousel() {
+    const totalItems = Object.keys(archetypes).length;
+
+    function getItemsPerPage() {
+        if (window.innerWidth >= 1024) return 3;
+        if (window.innerWidth >= 640) return 2;
+        return 1;
+    }
+
+    function updateCarousel() {
+        const itemsPerPage = getItemsPerPage();
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        
+        // İndeksin sınırlarda kalmasını sağla
+        if (archetypeCurrentIndex >= totalPages) {
+            archetypeCurrentIndex = totalPages - 1;
+        }
+        if (archetypeCurrentIndex < 0) {
+            archetypeCurrentIndex = 0;
+        }
+
+        const offset = -archetypeCurrentIndex * 100;
+        archetypeCarousel.style.transform = `translateX(${offset}%)`;
+
+        archetypePrevBtn.disabled = archetypeCurrentIndex === 0;
+        archetypeNextBtn.disabled = archetypeCurrentIndex >= totalPages - 1;
+    }
+
+    archetypeNextBtn.addEventListener('click', () => {
+        archetypeCurrentIndex++;
+        updateCarousel();
+    });
+
+    archetypePrevBtn.addEventListener('click', () => {
+        archetypeCurrentIndex--;
+        updateCarousel();
+    });
+
+    window.addEventListener('resize', () => {
+        // Yeniden boyutlandırmada karuseli güncelle
+        updateCarousel();
+    });
+
+    updateCarousel(); // İlk kurulum
+}
+
+
 /** 3D şekli başlatır */
 function initAbstractShape() {
     const container = document.getElementById('abstract-shape-container');
-    if (!container) return;
+    if (!container || container.children.length > 0) return;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    container.innerHTML = '';
     container.appendChild(renderer.domElement);
     const geometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
     const material = new THREE.MeshStandardMaterial({ color: 0x9333ea, metalness: 0.7, roughness: 0.2, emissive: 0x00f6ff, emissiveIntensity: 0.2 });
@@ -740,10 +949,11 @@ function showScreen(screenId) {
 document.addEventListener('DOMContentLoaded', () => {
     createStars();
     initAbstractShape();
+    createArchetypeCards();
+    setupArchetypeCarousel();
     showScreen('welcome-screen');
 });
 
-// IMPROVEMENT: Replaced alert with inline validation
 startAssessmentBtn.addEventListener('click', () => {
     const userName = userNameInput.value.trim();
     if (!userName) {
@@ -755,7 +965,6 @@ startAssessmentBtn.addEventListener('click', () => {
     initializeApp();
 });
 
-// IMPROVEMENT: Hide error message when user starts typing
 userNameInput.addEventListener('input', () => {
     if (userNameInput.value.trim() !== '') {
         nameError.classList.add('hidden');
@@ -785,9 +994,7 @@ btnPrev.addEventListener('click', () => {
     }
 });
 
-// Dinamik olarak oluşturulan elementler için olay delegasyonu
 moduleContentArea.addEventListener('click', (e) => {
-    // Quiz seçenekleri
     const selectedQuizOption = e.target.closest('.quiz-option');
     if (selectedQuizOption) {
         const container = e.target.closest('#quiz-options-container');
@@ -798,7 +1005,6 @@ moduleContentArea.addEventListener('click', (e) => {
         selectedQuizOption.classList.add('selected');
     }
 
-    // Şekil seçenekleri
     const selectedShapeOption = e.target.closest('.shape-option');
     if (selectedShapeOption) {
         const container = e.target.closest('#shape-options-container');
@@ -809,7 +1015,6 @@ moduleContentArea.addEventListener('click', (e) => {
         selectedShapeOption.classList.add('selected');
     }
 
-    // Gemini değerlendirme butonu
     if (e.target.classList.contains('gemini-eval-button')) {
         handleIdeaEvaluation(e);
     }
@@ -817,11 +1022,28 @@ moduleContentArea.addEventListener('click', (e) => {
 
 btnMainMenu.addEventListener('click', () => showScreen('welcome-screen'));
 btnRestart.addEventListener('click', () => {
-    // Reset name input and error for a clean restart
     userNameInput.value = '';
     nameError.classList.add('hidden');
     userNameInput.classList.remove('border-red-500');
     showScreen('welcome-screen');
+});
+
+// Tab Logic
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        tabContents.forEach(content => {
+            if (content.id === `${targetTab}-content`) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+    });
 });
 
 </script>
