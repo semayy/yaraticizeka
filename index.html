@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <title>Yaratıcı Zeka Profili</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -143,7 +143,7 @@
             background-color: #0f172a;
             box-shadow: 0 0 15px rgba(0, 246, 255, 0.4);
         }
-        .task-textarea { resize: vertical; min-height: 120px; }
+        .task-textarea { resize: vertical; min-height: 100px; }
 
         .quiz-option {
             background-color: rgba(30, 41, 59, 0.5);
@@ -172,19 +172,6 @@
         .shape-option.selected {
              transform: scale(1.1);
              filter: drop-shadow(0 0 15px var(--neon-cyan));
-        }
-
-        .gemini-feedback {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: rgba(0, 246, 255, 0.05);
-            border: 1px solid rgba(0, 246, 255, 0.2);
-            border-radius: 0.5rem;
-            text-align: left;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
-            max-height: 200px;
-            overflow-y: auto;
         }
 
         .loader {
@@ -280,12 +267,15 @@
             background: rgba(30, 41, 59, 0.8);
         }
         .archetype-icon-container {
-            margin-bottom: 1rem;
-            height: 60px;
+            margin: 0 auto 1rem auto;
+            height: 80px;
+            width: 80px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: var(--neon-cyan);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 246, 255, 0.1) 0%, transparent 70%);
         }
         .archetype-icon-container svg {
             width: 50px;
@@ -335,6 +325,44 @@
         .animate-pulse-loader-2 { animation: pulse-loader 3s ease-in-out infinite; animation-delay: 1.5s; }
         .animate-spin-slow { animation: spin 4s linear infinite reverse; }
 
+        /* Background Video */
+        #bg-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.2; /* Increased opacity */
+        }
+        .welcome-container {
+            background-color: #0a0f1f; /* Fallback background */
+        }
+        
+        /* Speech-to-text button */
+        .speech-to-text-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: #94a3b8;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .speech-to-text-btn:hover {
+            color: var(--neon-cyan);
+        }
+        .speech-to-text-btn.listening {
+            color: var(--neon-pink);
+            animation: pulse-mic 1.5s infinite;
+        }
+        @keyframes pulse-mic {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
     </style>
 </head>
 <body class="p-4 sm:p-6 md:p-8 flex flex-col min-h-screen">
@@ -343,8 +371,11 @@
     <main class="flex-grow">
         <!-- EKRAN 1: GİRİŞ EKRANI -->
         <div id="welcome-screen" class="max-w-5xl mx-auto">
-            <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl glow">
-                <div class="flex flex-col items-center justify-center py-8">
+            <div class="welcome-container relative bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl glow overflow-hidden">
+                <video id="bg-video" autoplay loop muted playsinline>
+                    <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-liquid-bubbles-in-a-loop-32163-large.mp4" type="video/mp4">
+                </video>
+                <div class="relative z-10 flex flex-col items-center justify-center py-8">
                     <div class="mb-6 relative">
                         <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 blur-2xl opacity-30 rounded-full"></div>
                         <h1 class="tech-font text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-purple-400 relative z-10 text-center" data-lang-key="welcome_title">
@@ -361,17 +392,22 @@
                         <div class="bg-slate-900/50 p-6 rounded-xl border border-cyan-700/30 shadow-lg">
                             <label for="user-name" class="block text-cyan-300 mb-2 tech-font" data-lang-key="enter_name">İSİM SOYİSİM:</label>
                             <div class="flex flex-col sm:flex-row gap-2">
-                                <input type="text" id="user-name" class="task-input flex-grow" placeholder="Unvan ve İsim">
-                                <button id="start-assessment" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-semibold tech-font flex items-center justify-center">
+                                <div class="relative flex-grow">
+                                    <input type="text" id="user-name" class="task-input w-full pr-10" placeholder="Unvan ve İsim">
+                                    <button class="speech-to-text-btn absolute top-1/2 right-2 -translate-y-1/2" data-target="user-name" title="Sesle Yaz">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zM4 4a4 4 0 014-4h4a4 4 0 014 4v6a4 4 0 01-4 4H8a4 4 0 01-4-4V4zM14 10a1 1 0 011 1v1a5 5 0 01-5 5H6a5 5 0 01-5-5v-1a1 1 0 112 0v1a3 3 0 003 3h4a3 3 0 003-3v-1a1 1 0 011-1z"/></svg>
+                                    </button>
+                                </div>
+                                <button id="start-assessment" class="btn-nav vibrate-on-click bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-semibold tech-font flex items-center justify-center">
                                     <span data-lang-key="start_button">BAŞLA</span>
                                 </button>
                             </div>
                             <p id="name-error" class="text-red-400 text-sm mt-2 text-center hidden">Lütfen başlamadan önce bir isim girin.</p>
                         </div>
                         <div class="mt-8 flex flex-wrap justify-center gap-3">
-                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="about">Hakkında</button>
-                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="archetypes">Arketipler</button>
-                            <button class="info-modal-btn btn-nav bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="contact">İletişim</button>
+                            <button class="info-modal-btn btn-nav vibrate-on-click bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="about">Hakkında</button>
+                            <button class="info-modal-btn btn-nav vibrate-on-click bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="archetypes">Arketipler</button>
+                            <button class="info-modal-btn btn-nav vibrate-on-click bg-slate-800/50 text-cyan-300 border border-cyan-800/50 rounded-lg px-4 py-2 text-sm" data-tab="contact">İletişim</button>
                         </div>
                     </div>
                 </div>
@@ -383,7 +419,7 @@
             <div class="bg-slate-900/70 backdrop-blur-sm rounded-3xl p-4 md:p-8 shadow-2xl">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                      <div class="w-full md:w-1/3">
-                        <button id="btn-main-menu" class="btn-nav bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-4 py-2 font-medium shadow-sm hover:bg-slate-800 tech-font" data-lang-key="main_menu_button">ANA MENÜ</button>
+                        <button id="btn-main-menu" class="btn-nav vibrate-on-click bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-4 py-2 font-medium shadow-sm hover:bg-slate-800 tech-font" data-lang-key="main_menu_button">ANA MENÜ</button>
                     </div>
                     <div class="w-full md:w-1/3 text-center order-first md:order-none">
                         <h2 id="stage-title" class="tech-font text-xl text-cyan-300">Aşama 1: Keşif</h2>
@@ -413,8 +449,8 @@
                 </div>
                 
                 <div class="flex flex-col sm:flex-row justify-between items-center mt-8 gap-4">
-                    <button id="btn-prev" class="btn-nav w-full sm:w-auto bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-6 py-3 font-medium flex items-center justify-center">ÖNCEKİ</button>
-                    <button id="btn-next" class="btn-nav w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-medium flex items-center justify-center">SONRAKİ</button>
+                    <button id="btn-prev" class="btn-nav vibrate-on-click w-full sm:w-auto bg-slate-900 text-cyan-400 border border-cyan-700/50 rounded-lg px-6 py-3 font-medium flex items-center justify-center">ÖNCEKİ</button>
+                    <button id="btn-next" class="btn-nav vibrate-on-click w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-6 py-3 font-medium flex items-center justify-center">SONRAKİ</button>
                 </div>
             </div>
         </div>
@@ -441,7 +477,7 @@
                 </div>
 
                 <div class="text-center mt-8">
-                     <button id="btn-restart" class="btn-nav bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-8 py-3 font-semibold tech-font" data-lang-key="restart_button">Yeniden Başla</button>
+                     <button id="btn-restart" class="btn-nav vibrate-on-click bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg px-8 py-3 font-semibold tech-font" data-lang-key="restart_button">Yeniden Başla</button>
                 </div>
              </div>
         </div>
@@ -454,13 +490,13 @@
     <!-- BİLGİ MODALI -->
     <div id="info-modal" class="modal-overlay">
         <div class="modal-content">
-            <button id="close-modal-btn" class="absolute top-4 right-5 text-slate-400 hover:text-white transition-colors">
+            <button id="close-modal-btn" class="absolute top-4 right-5 text-slate-400 hover:text-white transition-colors vibrate-on-click">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
             <div class="flex flex-wrap justify-center border-b border-slate-700 mb-6">
-                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="about">Hakkında</button>
-                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="archetypes">Arketipler</button>
-                <button class="tab-button tech-font py-2 px-6 rounded-t-lg" data-tab="contact">İletişim</button>
+                <button class="tab-button vibrate-on-click tech-font py-2 px-6 rounded-t-lg" data-tab="about">Hakkında</button>
+                <button class="tab-button vibrate-on-click tech-font py-2 px-6 rounded-t-lg" data-tab="archetypes">Arketipler</button>
+                <button class="tab-button vibrate-on-click tech-font py-2 px-6 rounded-t-lg" data-tab="contact">İletişim</button>
             </div>
             <div id="tab-content-container">
                 <div id="archetypes-content" class="tab-content">
@@ -470,10 +506,10 @@
                                 <!-- Archetype Cards will be dynamically inserted here -->
                             </div>
                         </div>
-                        <button id="archetype-prev" class="absolute top-1/2 -left-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                        <button id="archetype-prev" class="absolute top-1/2 -left-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10 vibrate-on-click">
                             <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                         </button>
-                        <button id="archetype-next" class="absolute top-1/2 -right-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10">
+                        <button id="archetype-next" class="absolute top-1/2 -right-4 -translate-y-1/2 bg-slate-800/50 p-2 rounded-full hover:bg-slate-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed z-10 vibrate-on-click">
                             <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </button>
                     </div>
@@ -495,8 +531,11 @@
     </div>
 
     <!-- SESLİ ASİSTAN BUTONU -->
-    <button id="voice-assistant-btn" title="Sesli Asistanı Başlat">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+    <button id="voice-assistant-btn" title="Sesli Asistanı Başlat" class="vibrate-on-click">
+        <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h6a2 2 0 012 2v10a2 2 0 01-2 2z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3V1M15 3V1M9 21v-2M15 21v-2" />
+        </svg>
     </button>
 
 <script>
@@ -548,6 +587,7 @@ let userAnswers = {};
 let userArchetypeScores = {};
 let archetypeChart = null;
 let archetypeCurrentIndex = 0;
+let activeSpeechToTextInput = null;
 
 // --- DİL VE VERİ YAPILARI --- //
 const translations = {
@@ -562,10 +602,6 @@ const translations = {
         overall_success: "Genel Başarı",
         profile_analysis: "Profil Analizi",
         restart_button: "Yeniden Başla",
-        evaluating_feedback: "Değerlendiriliyor...",
-        gemini_feedback_title: "Yapay Zeka Geri Bildirimi:",
-        gemini_error: "Bir hata oluştu. Lütfen tekrar deneyin.",
-        evaluate_ideas_button: "✨ Fikirlerimi Değerlendir",
     }
 };
 
@@ -714,11 +750,12 @@ function createTaskModule(module, index) {
     moduleContentArea.innerHTML = `
         <div class="w-full max-w-xl text-center">
             <p class="text-slate-300 mb-4">${module.tr.instruction}</p>
-            <textarea class="task-input task-textarea" data-module-index="${index}">${savedAnswer}</textarea>
-            <button class="btn-nav mt-4 bg-gradient-to-r from-teal-400 to-cyan-600 text-white rounded-lg px-5 py-2 gemini-eval-button" data-module-index="${index}">
-                ${translations.tr.evaluate_ideas_button}
-            </button>
-            <div class="gemini-feedback-container mt-4"></div>
+            <div class="relative">
+                <textarea class="task-input task-textarea w-full pr-10" data-module-index="${index}">${savedAnswer}</textarea>
+                <button class="speech-to-text-btn absolute top-3 right-2" data-target="textarea[data-module-index='${index}']" title="Sesle Yaz">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4zM4 4a4 4 0 014-4h4a4 4 0 014 4v6a4 4 0 01-4 4H8a4 4 0 01-4-4V4zM14 10a1 1 0 011 1v1a5 5 0 01-5 5H6a5 5 0 01-5-5v-1a1 1 0 112 0v1a3 3 0 003 3h4a3 3 0 003-3v-1a1 1 0 011-1z"/></svg>
+                </button>
+            </div>
         </div>
     `;
 }
@@ -727,7 +764,7 @@ function createTaskModule(module, index) {
 function createQuizModule(module, index) {
     const savedAnswer = userAnswers[index];
     let optionsHTML = module.tr.options.map((option, i) => `
-        <div class="quiz-option w-full text-left p-4 rounded-lg ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
+        <div class="quiz-option vibrate-on-click w-full text-left p-4 rounded-lg ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
             <span class="font-bold tech-font mr-2">${String.fromCharCode(65 + i)}:</span>
             <span>${option}</span>
         </div>
@@ -745,7 +782,7 @@ function createQuizModule(module, index) {
 function createShapeModule(module, index) {
     const savedAnswer = userAnswers[index];
     const optionsHTML = module.data.options.map((option, i) => `
-        <div class="shape-option p-4 ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
+        <div class="shape-option vibrate-on-click p-4 ${savedAnswer === i ? 'selected' : ''}" data-option-index="${i}">
             <svg viewBox="0 0 100 100" class="w-24 h-24" fill="none" stroke="white" stroke-width="3">${option}</svg>
         </div>
     `).join('');
@@ -842,11 +879,11 @@ async function generateProfileAnalysis() {
     
     const analysisLoaderHTML = `
         <div class="text-center p-4">
-            <div class="relative w-24 h-24 mx-auto mb-4">
+            <div class="relative w-20 h-20 mx-auto mb-4">
                 <div class="absolute inset-0 rounded-full border-2 border-cyan-500/30 animate-pulse-loader-1"></div>
                 <div class="absolute inset-0 rounded-full border-2 border-purple-500/30 animate-pulse-loader-2"></div>
                 <div class="absolute inset-0 flex items-center justify-center">
-                    <svg class="w-10 h-10 text-cyan-300 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-8 h-8 text-cyan-300 animate-spin-slow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.293 2.293M17.707 5.293L15.414 7.586m-3.414.414L9.586 9.586m6.414 6.414l-2.293 2.293M12 12a2 2 0 100-4 2 2 0 000 4zm0 0a2 2 0 100 4 2 2 0 000-4z" />
                     </svg>
                 </div>
@@ -869,34 +906,13 @@ async function generateProfileAnalysis() {
         const analysis = await callGeminiAPI(prompt);
         analysisContainer.innerHTML = `<p>${analysis}</p>`;
     } catch (error) {
-        // Hata durumunda, isteğe göre, hata mesajı yerine yükleniyor animasyonunu göstermeye devam et
-        analysisContainer.innerHTML = analysisLoaderHTML;
-    }
-}
-
-/** Gemini ile görev cevaplarını değerlendirir */
-async function handleIdeaEvaluation(event) {
-    const button = event.target;
-    const moduleIndex = parseInt(button.dataset.moduleIndex);
-    const module = assessmentModules[moduleIndex];
-    const textarea = document.querySelector(`textarea[data-module-index="${moduleIndex}"]`);
-    const ideas = textarea.value;
-    const feedbackContainer = button.nextElementSibling;
-
-    if (!ideas.trim()) return;
-
-    feedbackContainer.innerHTML = `<div class="loader"></div><p>${translations.tr.evaluating_feedback}</p>`;
-    button.disabled = true;
-
-    const prompt = `Bir yaratıcılık eğitmeni olarak, kullanıcının şu göreve verdiği cevabı değerlendir: "${module.tr.instruction}". Cevap: "${ideas}". Cevabı, görevin ilişkili olduğu ${module.archetypes.map(a => archetypes[a].tr.name).join(' ve ')} arketipleri açısından analiz et. Güçlü yönleri ve gelişim alanlarını belirten kısa, yapıcı bir geri bildirim yaz.`;
-
-    try {
-        const feedback = await callGeminiAPI(prompt);
-        feedbackContainer.innerHTML = `<div class="gemini-feedback"><strong>${translations.tr.gemini_feedback_title}</strong><br>${feedback}</div>`;
-    } catch (error) {
-        feedbackContainer.innerHTML = `<div class="gemini-feedback text-red-400">${translations.tr.gemini_error}</div>`;
-    } finally {
-        button.disabled = false;
+        analysisContainer.innerHTML = `
+            <div class="text-center text-amber-300 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <p class="text-3xl mb-2 animate-pulse">📡</p>
+                <p class="font-bold tech-font text-lg">SİNYAL KAYBI!</p>
+                <p class="text-sm mt-1">Yapay zeka ile bağlantı kurulamadı (Hata: 401). Lütfen API anahtarınızı kontrol edin veya daha sonra tekrar deneyin.</p>
+            </div>
+        `;
     }
 }
 
@@ -1027,6 +1043,13 @@ function showScreen(screenId) {
     document.getElementById(screenId).style.display = 'block';
 }
 
+/** Titreşim fonksiyonu */
+function triggerVibration() {
+    if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+    }
+}
+
 // --- SESLİ ASİSTAN MANTIĞI --- //
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition;
@@ -1055,9 +1078,44 @@ if(SpeechRecognition) {
     };
 }
 
+let textToSpeechRecognition;
+if(SpeechRecognition) {
+    textToSpeechRecognition = new SpeechRecognition();
+    textToSpeechRecognition.lang = 'tr-TR';
+    textToSpeechRecognition.continuous = false;
+    textToSpeechRecognition.interimResults = false;
+
+    textToSpeechRecognition.onstart = () => {
+        const btn = document.querySelector(`.speech-to-text-btn[data-target="${activeSpeechToTextInput}"]`);
+        if (btn) btn.classList.add('listening');
+    };
+
+    textToSpeechRecognition.onend = () => {
+        const btn = document.querySelector(`.speech-to-text-btn[data-target="${activeSpeechToTextInput}"]`);
+        if (btn) btn.classList.remove('listening');
+        activeSpeechToTextInput = null;
+    };
+
+    textToSpeechRecognition.onerror = (event) => {
+        console.error('Text-to-speech recognition error:', event.error);
+        const btn = document.querySelector(`.speech-to-text-btn[data-target="${activeSpeechToTextInput}"]`);
+        if (btn) btn.classList.remove('listening');
+    };
+
+    textToSpeechRecognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (activeSpeechToTextInput) {
+            const targetElement = document.querySelector(activeSpeechToTextInput) || document.getElementById(activeSpeechToTextInput);
+            if(targetElement) {
+                targetElement.value += transcript;
+            }
+        }
+    };
+}
+
+
 function speak(text) {
     if ('speechSynthesis' in window) {
-        // Mevcut konuşmayı iptal et
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'tr-TR';
@@ -1068,7 +1126,22 @@ function speak(text) {
 
 function processVoiceCommand(command) {
     console.log(`Command received: ${command}`);
-    if (command.includes('test nedir') || command.includes('amaç ne')) {
+    if (command.includes('ekranı oku')) {
+        let textToRead = '';
+        if (welcomeScreen.style.display !== 'none') {
+            textToRead = "Giriş ekranındasınız. Başlık: Yaratıcı Zeka Profili. " + document.querySelector('[data-lang-key="welcome_intro"]').textContent;
+        } else if (assessmentScreen.style.display !== 'none') {
+            const title = moduleTitle.textContent;
+            const instruction = moduleContentArea.querySelector('p')?.textContent || "Lütfen seçiminizi yapın.";
+            textToRead = `Şu anki modül: ${title}. ${instruction}`;
+        } else if (resultsScreen.style.display !== 'none') {
+            const user = userNameResults.textContent;
+            const percentage = successPercentage.textContent;
+            const analysis = profileAnalysisText.textContent;
+            textToRead = `Sonuç ekranı. ${user} için yaratıcı profil. Genel başarı: yüzde ${percentage}. ${analysis}`;
+        }
+        speak(textToRead || "Okunacak bir içerik bulunamadı.");
+    } else if (command.includes('test nedir') || command.includes('amaç ne')) {
         const aboutText = document.querySelector('#about-content').textContent;
         speak("Elbette, testin amacı hakkında bilgi veriyorum. " + aboutText);
     } else if (command.includes('arketipler nelerdir')) {
@@ -1077,7 +1150,7 @@ function processVoiceCommand(command) {
     } else if (command.includes('nasıl başlarım')) {
         speak("Başlamak için adınızı yazın ve başla butonuna tıklayın.");
     } else if (command.includes('yardım')) {
-        speak("Bana 'test nedir', 'arketipler nelerdir', 'nasıl başlarım' veya belirli bir arketipin adını sorabilirsiniz. Örneğin, 'Athena arketipi nedir?'");
+        speak("Bana 'ekranı oku', 'test nedir', 'arketipler nelerdir', 'nasıl başlarım' veya belirli bir arketipin adını sorabilirsiniz. Örneğin, 'Athena arketipi nedir?'");
     } else {
         let found = false;
         for (const key in archetypes) {
@@ -1102,6 +1175,24 @@ document.addEventListener('DOMContentLoaded', () => {
     createArchetypeCards();
     setupArchetypeCarousel();
     showScreen('welcome-screen');
+});
+
+document.body.addEventListener('click', (e) => {
+    if (e.target.closest('.vibrate-on-click')) {
+        triggerVibration();
+    }
+    
+    // Speech-to-text button handler
+    const speechBtn = e.target.closest('.speech-to-text-btn');
+    if (speechBtn && textToSpeechRecognition) {
+        triggerVibration();
+        activeSpeechToTextInput = speechBtn.dataset.target;
+        try {
+            textToSpeechRecognition.start();
+        } catch(err) {
+            console.error("Text-to-speech recognition already started.", err);
+        }
+    }
 });
 
 startAssessmentBtn.addEventListener('click', () => {
@@ -1147,6 +1238,7 @@ btnPrev.addEventListener('click', () => {
 moduleContentArea.addEventListener('click', (e) => {
     const selectedQuizOption = e.target.closest('.quiz-option');
     if (selectedQuizOption) {
+        triggerVibration();
         const container = e.target.closest('#quiz-options-container');
         const moduleIndex = parseInt(container.dataset.moduleIndex);
         const selectedIndex = parseInt(selectedQuizOption.dataset.optionIndex);
@@ -1157,16 +1249,13 @@ moduleContentArea.addEventListener('click', (e) => {
 
     const selectedShapeOption = e.target.closest('.shape-option');
     if (selectedShapeOption) {
+        triggerVibration();
         const container = e.target.closest('#shape-options-container');
         const moduleIndex = parseInt(container.dataset.moduleIndex);
         const selectedIndex = parseInt(selectedShapeOption.dataset.optionIndex);
         userAnswers[moduleIndex] = selectedIndex;
         container.querySelectorAll('.shape-option').forEach(opt => opt.classList.remove('selected'));
         selectedShapeOption.classList.add('selected');
-    }
-
-    if (e.target.classList.contains('gemini-eval-button')) {
-        handleIdeaEvaluation(e);
     }
 });
 
