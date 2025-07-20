@@ -145,17 +145,17 @@
         }
         .task-textarea { resize: vertical; min-height: 100px; }
 
-        .quiz-option {
+        .quiz-option, .rating-option {
             background-color: rgba(30, 41, 59, 0.5);
             border: 1px solid #334155;
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        .quiz-option:hover {
+        .quiz-option:hover, .rating-option:hover {
             background-color: rgba(56, 189, 248, 0.2);
             border-color: var(--neon-cyan);
         }
-        .quiz-option.selected {
+        .quiz-option.selected, .rating-option.selected {
             background-color: rgba(0, 246, 255, 0.3);
             border-color: var(--neon-cyan);
             box-shadow: 0 0 15px rgba(0, 246, 255, 0.4);
@@ -426,13 +426,13 @@
                     </div>
                     <div class="w-full md:w-1/3 flex justify-center md:justify-end">
                         <span class="bg-gradient-to-r from-cyan-900/50 to-purple-900/50 text-white py-2 px-4 rounded-full text-sm font-bold tech-font">
-                            <span data-lang-key="progress">İLERLEME</span>: <span id="overall-progress-count">1</span>/18
+                            <span data-lang-key="progress">İLERLEME</span>: <span id="overall-progress-count">1</span>/22
                         </span>
                     </div>
                 </div>
                 
                 <div class="mb-6">
-                    <div class="progress-bar"><div class="progress" id="progress-bar" style="width: 5.5%"></div></div>
+                    <div class="progress-bar"><div class="progress" id="progress-bar" style="width: 4.5%"></div></div>
                 </div>
                 
                 <div class="grid grid-cols-1 gap-8">
@@ -461,13 +461,14 @@
                 <h1 class="tech-font text-3xl md:text-4xl font-bold text-center mb-2 text-cyan-300" data-lang-key="results_title">Yaratıcı Profiliniz</h1>
                 <p class="text-center text-cyan-200 mb-8" id="user-name-results"></p>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-                    <div class="lg:col-span-1 text-center">
-                        <h3 class="tech-font text-xl text-purple-300 mb-2" data-lang-key="overall_success">Genel Başarı</h3>
-                        <div id="success-percentage" class="text-7xl font-bold text-white tech-font">0%</div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="tech-font text-xl text-purple-300 mb-2 text-center">Arketip Dağılımı</h3>
+                        <canvas id="archetype-chart"></canvas>
                     </div>
-                    <div class="lg:col-span-2">
-                         <canvas id="archetype-chart"></canvas>
+                     <div>
+                        <h3 class="tech-font text-xl text-purple-300 mb-2 text-center">Yaratıcı Zeka Dengesi</h3>
+                        <canvas id="skills-chart"></canvas>
                     </div>
                 </div>
                 
@@ -563,8 +564,8 @@ const moduleContentArea = document.getElementById('module-content-area');
 
 // Sonuç Ekranı Elementleri
 const userNameResults = document.getElementById('user-name-results');
-const successPercentage = document.getElementById('success-percentage');
 const archetypeChartCanvas = document.getElementById('archetype-chart');
+const skillsChartCanvas = document.getElementById('skills-chart');
 const profileAnalysisText = document.getElementById('profile-analysis-text');
 const starsContainer = document.getElementById('stars');
 
@@ -585,7 +586,9 @@ const voiceAssistantBtn = document.getElementById('voice-assistant-btn');
 let currentModuleIndex = 0;
 let userAnswers = {};
 let userArchetypeScores = {};
+let creativitySkillsScores = {};
 let archetypeChart = null;
+let skillsChart = null;
 let archetypeCurrentIndex = 0;
 let activeSpeechToTextInput = null;
 
@@ -599,7 +602,6 @@ const translations = {
         main_menu_button: "ANA MENÜ",
         progress: "İLERLEME",
         results_title: "Yaratıcı Profiliniz",
-        overall_success: "Genel Başarı",
         profile_analysis: "Profil Analizi",
         restart_button: "Yeniden Başla",
     }
@@ -648,30 +650,43 @@ const archetypes = {
     },
 };
 
-const assessmentModules = [
-    // --- AŞAMA 1: KEŞİF ---
-    { stage: 1, type: 'task', archetypes: ['athena', 'dionysus'], tr: { title: "Modül 1: Strateji vs. Sezgi", instruction: "Bir müzik festivali düzenliyorsunuz. A) Festivalin ana stratejisini (hedef kitle, bütçe) 2-3 cümlede özetleyin. B) Festival için 3 tane çılgın ve spontane etkinlik fikri listeleyin." } },
-    { stage: 1, type: 'task', archetypes: ['apollo', 'hephaestus'], tr: { title: "Modül 2: Uyum vs. Yapı", instruction: "Yeni bir akıllı saat tasarlıyorsunuz. A) Saatin logosu için bir konsept açıklayın. B) Saatin en önemli 3 teknik özelliğini listeleyin." } },
-    { stage: 1, type: 'task', archetypes: ['hermes', 'janus'], tr: { title: "Modül 3: Çeviklik vs. Yansıtma", instruction: "A) 'Bulut', 'Anahtar', 'Müzik' kelimeleri arasında bir bağlantı kurun. B) Geçmişte başarısız olan bir projeden çıkarılacak bir dersi yazın." } },
-    { stage: 1, type: 'task', archetypes: ['prometheus', 'artemis'], tr: { title: "Modül 4: Vizyon vs. Odak", instruction: "A) 2050'de eğitimin nasıl olacağını hayal edin. B) Bu vizyondaki tek bir soruna (örn: eşitsizlik) odaklanıp bir çözüm önerin." } },
-    { stage: 1, type: 'task', archetypes: ['persephone', 'thalia'], tr: { title: "Modül 5: Dönüşüm vs. Sosyal Zeka", instruction: "A) Eski bir gazeteyi hangi farklı amaçlarla kullanabilirsiniz? 3 fikir yazın. B) [Rastgele bir resim gösterilecek] Bu resme komik bir başlık bulun." } },
-    { stage: 1, type: 'intro', tr: { title: "Modül 6: Aşama 1 Tamamlandı", instruction: "Keşif aşamasını tamamladınız. Şimdi bilgilerinizi test etme zamanı. Bir sonraki aşama, senaryo bazlı sorulardan oluşan bir quiz'dir." } },
-    
-    // --- AŞAMA 2: SINAMA (QUIZ) ---
-    { stage: 2, type: 'quiz', tr: { question: "Bir ürünün beklenmedik bir şekilde popülerliğini kaybetmesi durumunda, hangi yaklaşım öncelikli olmalıdır?", options: ["Pazar verilerini analiz edip strateji oluşturmak.", "Hızla yeni bir pazarlama kampanyası denemek.", "Ürünün tasarımını tamamen değiştirmek."], answer: 0, archetype: "athena" } },
-    { stage: 2, type: 'quiz', tr: { question: "Bir projenin estetik ve kullanıcı deneyimi eleştiriliyorsa, hangi arketipin yeteneğine en çok ihtiyaç duyulur?", options: ["Mühendislik ve yapısal sağlamlık.", "Uyum, denge ve sanatsal vizyon.", "Geçmiş hatalardan ders çıkarma."], answer: 1, archetype: "apollo" } },
-    { stage: 2, type: 'quiz', tr: { question: "Kriz anında hızlı ve yaratıcı çözümler bulmak için hangi arketip en uygundur?", options: ["Gelecek için uzun vadeli planlar yapan.", "Farklı fikirler arasında anında köprü kuran.", "Belirli bir hedefe odaklanıp şaşmayan."], answer: 1, archetype: "hermes" } },
-    { stage: 2, type: 'quiz', tr: { question: "Soyut bir konsepti, çalışan bir prototipe dönüştürme görevi en çok hangi arketipe aittir?", options: ["Prometheus", "Hephaestus", "Dionysus"], answer: 1, archetype: "hephaestus" } },
-    { stage: 2, type: 'quiz', tr: { question: "Mevcut bir teknolojiyi alıp, kimsenin aklına gelmeyen yepyeni bir alanda kullanma fikri hangi arketipi yansıtır?", options: ["Persephone", "Janus", "Apollo"], answer: 0, archetype: "persephone" } },
-    { stage: 2, type: 'intro', tr: { title: "Modül 12: Aşama 2 Tamamlandı", instruction: "Quiz aşamasını başarıyla geçtiniz. Son aşama, soyut düşünme ve desen tanıma yeteneğinizi ölçecek olan şekil eşleştirme testidir." } },
+const creativitySkills = {
+    divergent: { tr: "Iraksak Düşünme" },
+    convergent: { tr: "Yakınsak Düşünme" },
+    lateral: { tr: "Yanal Düşünme" },
+    constructive: { tr: "İnşacı Düşünme" },
+};
 
-    // --- AŞAMA 3: SENTEZ (ŞEKİL EŞLEŞTİRME) ---
-    { stage: 3, type: 'shape', archetype: 'apollo', tr: { title: "Modül 13: Simetriyi Bul" }, data: { problem: `<path d="M50 10 V 90 M 10 50 H 50" stroke="white" stroke-width="3"/>`, options: [`<path d="M50 10 V 90 M 90 50 H 50" stroke="white" stroke-width="3"/>`, `<path d="M10 10 L 50 50 L 10 90" stroke="white" stroke-width="3"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'hephaestus', tr: { title: "Modül 14: Parçayı Tamamla" }, data: { problem: `<path d="M20 20 H 80 V 80 H 60 V 40 H 40" stroke="white" stroke-width="3"/>`, options: [`<path d="M40 40 V 80 H 20 V 20" stroke="white" stroke-width="3"/>`, `<circle cx="50" cy="60" r="10" stroke="white" stroke-width="3"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'dionysus', tr: { title: "Modül 15: Deseni Boz" }, data: { problem: `<g><circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/><circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/></g>`, options: [`<circle cx="50" cy="50" r="10"/>`, `<rect x="40" y="40" width="20" height="20"/>`], answer: 1 } },
-    { stage: 3, type: 'shape', archetype: 'hermes', tr: { title: "Modül 16: Köprüyü Kur" }, data: { problem: `<g><circle cx="25" cy="50" r="15"/><rect x="65" y="35" width="30" height="30"/></g>`, options: [`<path d="M40 50 H 65"/>`, `<path d="M25 65 C 40 80, 60 80, 75 65"/>`], answer: 0 } },
-    { stage: 3, type: 'shape', archetype: 'artemis', tr: { title: "Modül 17: Hedefi Bul" }, data: { problem: `<g><circle cx="50" cy="50" r="40" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="30" stroke-dasharray="5 5"/><circle cx="50" cy="50" r="20" stroke-dasharray="5 5"/></g>`, options: [`<circle cx="50" cy="50" r="5"/>`, `<path d="M50 10 V 90 M10 50 H 90"/>`], answer: 1 } },
-    { stage: 3, type: 'shape', archetype: 'prometheus', tr: { title: "Modül 18: Yeni Formu Yarat" }, data: { problem: `<g><rect x="20" y="40" width="20" height="20"/><circle cx="80" cy="50" r="10"/></g>`, options: [`<rect x="50" y="40" width="20" height="20"/>`, `<path d="M40 50 C 50 20, 70 80, 80 50"/>`], answer: 1 } }
+const assessmentModules = [
+    // --- AŞAMA 1: KEŞİF (Iraksak & Yanal Düşünme) ---
+    { stage: 1, type: 'task', archetypes: ['persephone', 'dionysus'], tr: { title: "Modül 1: Alternatif Kullanımlar", instruction: "Sıradan bir 'tuğla' için olabildiğince çok sayıda, alışılmadık ve yaratıcı kullanım alanı listeleyin." } },
+    { stage: 1, type: 'task', archetypes: ['prometheus', 'hermes'], tr: { title: "Modül 2: Sonuçları Hayal Etme", instruction: "İnsanların uykuya ihtiyacı olmasaydı, dünya nasıl bir yer olurdu? Bu durumun 3 olumlu ve 3 olumsuz sonucunu yazın." } },
+    { stage: 1, type: 'task', archetypes: ['hermes', 'thalia'], tr: { title: "Modül 3: Bağlantı Kurma", instruction: "'Pusula', 'fısıltı' ve 'gölge' kelimelerini anlamlı bir şekilde bir araya getiren bir cümle veya kısa bir paragraf yazın." } },
+    { stage: 1, type: 'task', archetypes: ['janus', 'athena'], tr: { title: "Modül 4: Problemi Yeniden Çerçeveleme", instruction: "Bir müzedeki en sıkıcı olduğu düşünülen bir eseri, ziyaretçiler için en ilgi çekici hale nasıl getirirsiniz? 3 somut öneri sunun." } },
+    { stage: 1, type: 'task', archetypes: ['hephaestus', 'artemis'], tr: { title: "Modül 5: Kısıtlamalarla Tasarım", instruction: "Sadece tek bir A4 kağıdı ve bir ataş kullanarak, bir yumurtayı 1 metreden düşmeye karşı koruyacak bir yapı tasarlayın. Adımlarınızı açıklayın." } },
+    { stage: 1, type: 'intro', tr: { title: "Modül 6: Aşama 1 Tamamlandı", instruction: "Fikir üretme ve keşif aşamasını tamamladınız. Şimdi analitik ve mantıksal düşünme becerilerinizi test etme zamanı." } },
+    
+    // --- AŞAMA 2: SINAMA (Yakınsak & Mantıksal Düşünme) ---
+    { stage: 2, type: 'quiz', tr: { question: "Bir gölde nilüfer yaprakları var. Her gün, yaprakların kapladığı alan iki katına çıkıyor. Gölün tamamen kaplanması 48 gün sürüyorsa, yarısının kaplanması kaç gün sürer?", options: ["24 gün", "47 gün", "12 gün"], answer: 1, archetype: "athena" } },
+    { stage: 2, type: 'quiz', tr: { question: "Aşağıdaki kelimelerden hangisi diğerlerinden farklıdır?", options: ["Gitar", "Piyano", "Keman", "Bateri", "Flüt"], answer: 3, archetype: "apollo" } },
+    { stage: 2, type: 'quiz', tr: { question: "Bir doktor size 3 hap verir ve bunları yarım saat arayla almanızı söyler. Tüm hapları bitirmeniz ne kadar sürer?", options: ["1.5 saat", "1 saat", "45 dakika"], answer: 1, archetype: "hermes" } },
+    { stage: 2, type: 'quiz', tr: { question: "Aşağıdaki beş şekilden dördü belirli bir şekilde benzerdir. Hangisi diğerlerinden farklıdır?", options: ["Kare", "Daire", "Üçgen", "Elips", "Altıgen"], answer: 1, archetype: "apollo" } },
+    { stage: 2, type: 'quiz', tr: { question: "Bir adam, bir binanın 10. katında yaşıyor. Her gün asansörle aşağı iniyor. Yukarı çıkarken ise, eğer hava yağmurlu değilse 7. kata kadar asansörle çıkıp kalanını merdivenle yürüyor. Neden?", options: ["Asansör bozuk.", "Spor yapmak istiyor.", "Adamın boyu kısa ve sadece 7. kat düğmesine yetişebiliyor (yağmurlu günlerde şemsiyesiyle daha yukarı basabiliyor)."], answer: 2, archetype: "prometheus" } },
+    { stage: 2, type: 'intro', tr: { title: "Modül 12: Aşama 2 Tamamlandı", instruction: "Analitik düşünme aşamasını başarıyla geçtiniz. Sonraki aşama, görsel zekanızı ve desen tanıma yeteneğinizi ölçecektir." } },
+
+    // --- AŞAMA 3: SENTEZ (Görsel Zeka) ---
+    { stage: 3, type: 'shape', archetype: 'apollo', tr: { title: "Modül 13: Deseni Tamamla" }, data: { problem: `<g><circle cx="20" cy="20" r="10"/><circle cx="50" cy="20" r="10"/><circle cx="80" cy="20" r="10"/><circle cx="20" cy="50" r="10"/><circle cx="50" cy="50" r="10"/></g>`, options: [`<circle cx="80" cy="50" r="10"/>`, `<circle cx="20" cy="80" r="10"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'hephaestus', tr: { title: "Modül 14: Eksik Parça" }, data: { problem: `<path d="M20 20 H 80 V 80 H 20 V 20 M 50 20 V 80 M 20 50 H 80" stroke-width="3"/>`, options: [`<circle cx="50" cy="50" r="10" stroke-width="3"/>`, `<path d="M35 35 L 65 65 M 65 35 L 35 65" stroke-width="3"/>`], answer: 1 } },
+    { stage: 3, type: 'shape', archetype: 'dionysus', tr: { title: "Modül 15: Farklı Olanı Bul" }, data: { problem: `<g><path d="M20 80 L 50 20 L 80 80 Z"/><rect x="110" y="20" width="60" height="60"/><circle cx="210" cy="50" r="30"/></g>`, options: [`<path d="M20 80 L 50 20 L 80 80 Z"/>`, `<rect x="110" y="20" width="60" height="60"/>`, `<path d="M290 20 H 350 V 80"/>`], answer: 2 } },
+    { stage: 3, type: 'shape', archetype: 'janus', tr: { title: "Modül 16: Simetriyi Oluştur" }, data: { problem: `<path d="M50 20 V 80 M 50 50 C 80 20 80 80 50 50" stroke-width="3"/>`, options: [`<path d="M50 50 C 20 20 20 80 50 50" stroke-width="3"/>`, `<path d="M20 20 H 80" stroke-width="3"/>`], answer: 0 } },
+    { stage: 3, type: 'shape', archetype: 'artemis', tr: { title: "Modül 17: Katlama Sonucu" }, data: { problem: `<g><rect x="10" y="10" width="80" height="80" stroke-dasharray="5 5"/><path d="M10 50 H 90" stroke-width="2"/><path d="M50 10 V 50" stroke-width="2"/><circle cx="30" cy="30" r="5" fill="currentColor"/></g>`, options: [`<circle cx="70" cy="70" r="5"/>`, `<g><circle cx="30" cy="70" r="5"/><circle cx="70" cy="70" r="5"/></g>`], answer: 1 } },
+    { stage: 3, type: 'intro', tr: { title: "Modül 18: Aşama 3 Tamamlandı", instruction: "Görsel zeka bölümünü tamamladınız. Son aşamada, kendi yaratıcı becerilerinizi değerlendireceksiniz." } },
+    
+    // --- AŞAMA 4: ÖZ-DEĞERLENDİRME (Yaratıcılık Becerileri) ---
+    { stage: 4, type: 'rating', skill: 'divergent', tr: { title: "Modül 19: Iraksak Düşünme", question: "Bir konu hakkında çok sayıda farklı fikir üretme konusunda kendinize 1'den 5'e kadar puan verin." } },
+    { stage: 4, type: 'rating', skill: 'convergent', tr: { title: "Modül 20: Yakınsak Düşünme", question: "Farklı seçenekler arasından en mantıklı ve etkili olanı seçme konusunda kendinize 1'den 5'e kadar puan verin." } },
+    { stage: 4, type: 'rating', skill: 'lateral', tr: { title: "Modül 21: Yanal Düşünme", question: "Problemlere alışılmışın dışında, beklenmedik açılardan bakabilme konusunda kendinize 1'den 5'e kadar puan verin." } },
+    { stage: 4, type: 'rating', skill: 'constructive', tr: { title: "Modül 22: İnşacı Düşünme", question: "Bir fikri alıp onu somut bir plana veya projeye dönüştürme konusunda kendinize 1'den 5'e kadar puan verin." } }
 ];
 
 // --- GEMINI API YARDIMCI FONKSİYONU --- //
@@ -715,6 +730,7 @@ function initializeApp() {
     currentModuleIndex = 0;
     userAnswers = {};
     userArchetypeScores = Object.keys(archetypes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+    creativitySkillsScores = Object.keys(creativitySkills).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
     
     showScreen('assessment-screen');
     loadModule(currentModuleIndex);
@@ -735,6 +751,7 @@ function loadModule(index) {
         case 'task': createTaskModule(module, index); break;
         case 'quiz': createQuizModule(module, index); break;
         case 'shape': createShapeModule(module, index); break;
+        case 'rating': createRatingModule(module, index); break;
     }
     updateNavButtons();
 }
@@ -796,6 +813,23 @@ function createShapeModule(module, index) {
     `;
 }
 
+/** Derecelendirme modülü arayüzünü oluşturur */
+function createRatingModule(module, index) {
+    const savedAnswer = userAnswers[index];
+    let optionsHTML = [1, 2, 3, 4, 5].map(val => `
+        <div class="rating-option vibrate-on-click flex-1 text-center p-4 rounded-lg ${savedAnswer === val ? 'selected' : ''}" data-option-value="${val}">
+            <span class="font-bold tech-font text-2xl">${val}</span>
+        </div>
+    `).join('');
+
+    moduleContentArea.innerHTML = `
+        <div class="w-full max-w-2xl text-center">
+            <p class="text-slate-300 mb-6 text-lg">${module.tr.question}</p>
+            <div class="flex justify-center gap-4" id="rating-options-container" data-module-index="${index}">${optionsHTML}</div>
+        </div>
+    `;
+}
+
 /** Navigasyon butonlarının durumunu günceller */
 function updateNavButtons() {
     btnPrev.disabled = currentModuleIndex === 0;
@@ -804,12 +838,10 @@ function updateNavButtons() {
 
 /** Sonuçları hesaplar ve gösterir */
 async function showResults() {
-    let correctQuizCount = 0;
-    let correctShapeCount = 0;
-    const totalQuizzes = assessmentModules.filter(m => m.type === 'quiz').length;
-    const totalShapes = assessmentModules.filter(m => m.type === 'shape').length;
+    showScreen('results-screen');
 
     userArchetypeScores = Object.keys(archetypes).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
+    creativitySkillsScores = Object.keys(creativitySkills).reduce((acc, key) => ({ ...acc, [key]: 0 }), {});
 
     assessmentModules.forEach((module, index) => {
         const answer = userAnswers[index];
@@ -817,31 +849,26 @@ async function showResults() {
             module.archetypes.forEach(arc => userArchetypeScores[arc]++);
         }
         if (module.type === 'quiz' && answer === module.answer) {
-            correctQuizCount++;
             userArchetypeScores[module.archetype]++;
         }
         if (module.type === 'shape' && answer === module.data.answer) {
-            correctShapeCount++;
             userArchetypeScores[module.archetype]++;
         }
+        if (module.type === 'rating' && answer) {
+            creativitySkillsScores[module.skill] = answer;
+        }
     });
-
-    const totalSuccess = totalQuizzes + totalShapes > 0 ? ((correctQuizCount + correctShapeCount) / (totalQuizzes + totalShapes)) * 100 : 0;
     
     userNameResults.textContent = userNameInput.value.trim();
-    successPercentage.textContent = `${Math.round(totalSuccess)}%`;
     
     createRadarChart();
+    createSkillsChart();
     await generateProfileAnalysis();
-
-    showScreen('results-screen');
 }
 
 /** Radar grafiğini oluşturur */
 function createRadarChart() {
-    if (archetypeChart) {
-        archetypeChart.destroy();
-    }
+    if (archetypeChart) archetypeChart.destroy();
     const labels = Object.values(archetypes).map(a => a.tr.name);
     const data = Object.values(userArchetypeScores);
 
@@ -850,7 +877,7 @@ function createRadarChart() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Yaratıcı Profiliniz',
+                label: 'Arketip Dağılımı',
                 data: data,
                 backgroundColor: 'rgba(0, 246, 255, 0.2)',
                 borderColor: 'rgba(0, 246, 255, 1)',
@@ -872,6 +899,56 @@ function createRadarChart() {
         }
     });
 }
+
+/** Beceri grafiğini oluşturur */
+function createSkillsChart() {
+    if (skillsChart) skillsChart.destroy();
+    const labels = Object.values(creativitySkills).map(s => s.tr);
+    const data = Object.values(creativitySkillsScores);
+
+    skillsChart = new Chart(skillsChartCanvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Yaratıcılık Becerileri',
+                data: data,
+                backgroundColor: [
+                    'rgba(0, 246, 255, 0.4)',
+                    'rgba(168, 85, 247, 0.4)',
+                    'rgba(244, 114, 182, 0.4)',
+                    'rgba(56, 189, 248, 0.4)'
+                ],
+                borderColor: [
+                    'rgba(0, 246, 255, 1)',
+                    'rgba(168, 85, 247, 1)',
+                    'rgba(244, 114, 182, 1)',
+                    'rgba(56, 189, 248, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    max: 5,
+                    grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                    ticks: { color: '#e2e8f0' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#e2e8f0' }
+                }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
 
 /** Gemini ile kişiselleştirilmiş profil analiz metnini oluşturur */
 async function generateProfileAnalysis() {
@@ -899,8 +976,14 @@ async function generateProfileAnalysis() {
         .sort(([,a],[,b]) => b-a)
         .slice(0, 3)
         .map(([key, score]) => `${archetypes[key].tr.name}: ${score} puan`);
+        
+    const skillsSummary = Object.entries(creativitySkillsScores)
+        .map(([key, score]) => `${creativitySkills[key].tr}: ${score}/5 puan`).join(', ');
 
-    const prompt = `Bir yaratıcılık koçu olarak, bir kullanıcının yaratıcı zeka profili test sonuçlarını analiz et. Kullanıcının en yüksek puan aldığı ilk 3 mitolojik arketip şunlar: ${sortedArchetypes.join(', ')}. Bu sonuçlara dayanarak, kullanıcının en güçlü 2-3 yaratıcı yönünü, bu yönlerin birbiriyle nasıl bir sinerji oluşturduğunu ve potansiyel gelişim alanlarını açıklayan, teşvik edici ve kişisel bir analiz metni yaz. Analizi 2-3 paragrafta özetle.`;
+    const prompt = `Bir yaratıcılık koçu olarak, bir kullanıcının yaratıcı zeka profili test sonuçlarını analiz et.
+    Kullanıcının en yüksek puan aldığı ilk 3 mitolojik arketip şunlar: ${sortedArchetypes.join(', ')}.
+    Kullanıcının kendi değerlendirmesine göre yaratıcılık becerileri dengesi şu şekilde: ${skillsSummary}.
+    Bu iki veri setini birleştirerek, kullanıcının en güçlü 2-3 yaratıcı yönünü, bu yönlerin birbiriyle nasıl bir sinerji oluşturduğunu ve potansiyel gelişim alanlarını açıklayan, teşvik edici ve kişisel bir analiz metni yaz. Analizi 2-3 paragrafta özetle.`;
 
     try {
         const analysis = await callGeminiAPI(prompt);
@@ -921,6 +1004,7 @@ function getStageName(stage) {
     if (stage === 1) return "Keşif";
     if (stage === 2) return "Sınama";
     if (stage === 3) return "Sentez";
+    if (stage === 4) return "Öz-Değerlendirme";
     return "";
 }
 
@@ -1136,9 +1220,8 @@ function processVoiceCommand(command) {
             textToRead = `Şu anki modül: ${title}. ${instruction}`;
         } else if (resultsScreen.style.display !== 'none') {
             const user = userNameResults.textContent;
-            const percentage = successPercentage.textContent;
             const analysis = profileAnalysisText.textContent;
-            textToRead = `Sonuç ekranı. ${user} için yaratıcı profil. Genel başarı: yüzde ${percentage}. ${analysis}`;
+            textToRead = `Sonuç ekranı. ${user} için yaratıcı profil. ${analysis}`;
         }
         speak(textToRead || "Okunacak bir içerik bulunamadı.");
     } else if (command.includes('test nedir') || command.includes('amaç ne')) {
@@ -1236,15 +1319,19 @@ btnPrev.addEventListener('click', () => {
 });
 
 moduleContentArea.addEventListener('click', (e) => {
-    const selectedQuizOption = e.target.closest('.quiz-option');
-    if (selectedQuizOption) {
+    const option = e.target.closest('.quiz-option, .rating-option');
+    if (option) {
         triggerVibration();
-        const container = e.target.closest('#quiz-options-container');
+        const container = option.parentElement;
         const moduleIndex = parseInt(container.dataset.moduleIndex);
-        const selectedIndex = parseInt(selectedQuizOption.dataset.optionIndex);
-        userAnswers[moduleIndex] = selectedIndex;
-        container.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
-        selectedQuizOption.classList.add('selected');
+        const value = option.classList.contains('quiz-option') 
+            ? parseInt(option.dataset.optionIndex) 
+            : parseInt(option.dataset.optionValue);
+        
+        userAnswers[moduleIndex] = value;
+        
+        container.querySelectorAll('.quiz-option, .rating-option').forEach(opt => opt.classList.remove('selected'));
+        option.classList.add('selected');
     }
 
     const selectedShapeOption = e.target.closest('.shape-option');
