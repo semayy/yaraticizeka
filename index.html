@@ -702,7 +702,7 @@ const assessmentModules = [
 
 // --- GEMINI API YARDIMCI FONKSİYONU --- //
 async function callGeminiAPI(prompt) {
-    const apiKey = ""; 
+    const apiKey = "AIzaSyCEEywiObjmjA1ecwseMortdDKnt5Bwjrc"; 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     
     const payload = {
@@ -725,6 +725,10 @@ async function callGeminiAPI(prompt) {
         if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
             return result.candidates[0].content.parts[0].text;
         } else {
+            // Handle cases where the response structure is unexpected or content is missing
+            if (result.promptFeedback && result.promptFeedback.blockReason) {
+                throw new Error(`API call blocked: ${result.promptFeedback.blockReason}`);
+            }
             throw new Error("Invalid response structure from API.");
         }
     } catch (error) {
@@ -819,7 +823,7 @@ function createShapeModule(module, index) {
          <div class="w-full max-w-2xl text-center">
             <p class="text-slate-300 mb-4 text-lg">Problemi en iyi çözen veya tamamlayan şekli seçin.</p>
             <div class="mb-8 p-4"><svg viewBox="0 0 100 100" class="w-32 h-32 mx-auto" fill="none" stroke="var(--neon-cyan)" stroke-width="3">${module.data.problem}</svg></div>
-            <div class="flex justify-center gap-8" id="shape-options-container" data-module-index="${index}">${optionsHTML}</div>
+            <div class="flex flex-wrap justify-center gap-4 sm:gap-8" id="shape-options-container" data-module-index="${index}">${optionsHTML}</div>
         </div>
     `;
 }
@@ -828,7 +832,7 @@ function createShapeModule(module, index) {
 function createRatingModule(module, index) {
     const savedAnswer = userAnswers[index];
     let optionsHTML = [1, 2, 3, 4, 5].map(val => `
-        <div class="rating-option vibrate-on-click flex-1 text-center p-4 rounded-lg ${savedAnswer === val ? 'selected' : ''}" data-option-value="${val}">
+        <div class="rating-option vibrate-on-click w-16 h-16 sm:flex-1 flex items-center justify-center text-center p-4 rounded-lg ${savedAnswer === val ? 'selected' : ''}" data-option-value="${val}">
             <span class="font-bold tech-font text-2xl">${val}</span>
         </div>
     `).join('');
@@ -836,7 +840,7 @@ function createRatingModule(module, index) {
     moduleContentArea.innerHTML = `
         <div class="w-full max-w-2xl text-center">
             <p class="text-slate-300 mb-6 text-lg">${module.tr.question}</p>
-            <div class="flex justify-center gap-4" id="rating-options-container" data-module-index="${index}">${optionsHTML}</div>
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-4" id="rating-options-container" data-module-index="${index}">${optionsHTML}</div>
         </div>
     `;
 }
